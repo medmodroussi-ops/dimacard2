@@ -1,494 +1,528 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from "react";
 
-// --- CUSTOM CURSOR COMPONENT ---
-const CustomCursor = () => {
-  const cursorRef = useRef(null);
-  const ringRef = useRef(null);
-
-  useEffect(() => {
-    let mx = 0, my = 0, rx = 0, ry = 0;
-    
-    const handleMouseMove = (e) => {
-      mx = e.clientX;
-      my = e.clientY;
-      if (cursorRef.current) {
-        cursorRef.current.style.transform = `translate3d(${mx}px, ${my}px, 0) translate(-50%, -50%)`;
-      }
-    };
-
-    const loop = () => {
-      rx += (mx - rx) * 0.12;
-      ry += (my - ry) * 0.12;
-      if (ringRef.current) {
-        ringRef.current.style.transform = `translate3d(${rx}px, ${ry}px, 0) translate(-50%, -50%)`;
-      }
-      requestAnimationFrame(loop);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    requestAnimationFrame(loop);
-
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
-  return (
-    <div className="hidden lg:block">
-      <div 
-        ref={cursorRef} 
-        className="fixed top-0 left-0 w-2.5 h-2.5 bg-[#c8a96e] rounded-full pointer-events-none z-[9999] mix-blend-difference transition-all duration-100 ease-out" 
-      />
-      <div 
-        ref={ringRef} 
-        className="fixed top-0 left-0 w-9 h-9 border border-[#c8a96e] rounded-full pointer-events-none z-[9998] opacity-60 transition-all duration-300 ease-out" 
-      />
-    </div>
-  );
-};
-
-// --- SCROLL REVEAL COMPONENT ---
-const Reveal = ({ children, className = '', delay = 0 }) => {
-  const [isVisible, setIsVisible] = useState(false);
+// ─── Utility: useInView hook ───────────────────────────────────────────────
+function useInView(threshold = 0.15) {
   const ref = useRef(null);
-
+  const [inView, setInView] = useState(false);
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.unobserve(entry.target);
-        }
-      },
-      { threshold: 0.15 }
-    );
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true); }, { threshold });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return [ref, inView];
+}
 
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
+// ─── Navbar ────────────────────────────────────────────────────────────────
+function Navbar({ dark, toggleDark }) {
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const h = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", h);
+    return () => window.removeEventListener("scroll", h);
   }, []);
-
+  const links = ["Features", "How It Works", "Pricing", "Testimonials"];
   return (
-    <div
-      ref={ref}
-      style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-700 ease-out ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-      } ${className}`}
-    >
-      {children}
-    </div>
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? "py-3 bg-white/90 dark:bg-black/90 backdrop-blur-xl shadow-sm border-b border-black/5 dark:border-white/10" : "py-5 bg-transparent"}`}>
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+        <a href="#" className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-md">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7v10l10 5 10-5V7L12 2z" fill="white"/></svg>
+          </div>
+          <span className="font-bold text-xl tracking-tight text-black dark:text-white">Dima<span className="text-amber-500">card</span></span>
+        </a>
+        <div className="hidden md:flex items-center gap-8">
+          {links.map(l => (
+            <a key={l} href={`#${l.toLowerCase().replace(/\s+/g,"-")}`} className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors">{l}</a>
+          ))}
+        </div>
+        <div className="hidden md:flex items-center gap-3">
+          <button onClick={toggleDark} className="p-2 rounded-full text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors">
+            {dark ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            )}
+          </button>
+          <a href="#pricing" className="px-4 py-2 text-sm font-semibold rounded-full bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors">Get Dimacard</a>
+        </div>
+        <button className="md:hidden p-2" onClick={() => setOpen(!open)}>
+          <div className={`w-5 h-0.5 bg-black dark:bg-white mb-1 transition-all ${open ? "rotate-45 translate-y-1.5" : ""}`}/>
+          <div className={`w-5 h-0.5 bg-black dark:bg-white mb-1 transition-all ${open ? "opacity-0" : ""}`}/>
+          <div className={`w-5 h-0.5 bg-black dark:bg-white transition-all ${open ? "-rotate-45 -translate-y-1.5" : ""}`}/>
+        </button>
+      </div>
+      {open && (
+        <div className="md:hidden bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 px-6 py-4 flex flex-col gap-4">
+          {links.map(l => <a key={l} href={`#${l.toLowerCase().replace(/\s+/g,"-")}`} onClick={() => setOpen(false)} className="text-base font-medium text-gray-700 dark:text-gray-300">{l}</a>)}
+          <a href="#pricing" onClick={() => setOpen(false)} className="mt-2 px-5 py-2.5 text-sm font-semibold rounded-full bg-black dark:bg-white text-white dark:text-black text-center">Get Dimacard</a>
+        </div>
+      )}
+    </nav>
   );
-};
+}
 
-// --- 3D TILT CARD COMPONENT ---
-const TiltCard = () => {
-  const [rotation, setRotation] = useState({ x: 10, y: -15 });
-  const [isHovered, setIsHovered] = useState(false);
-  const cardRef = useRef(null);
-
-  const handleMouseMove = (e) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    
-    setRotation({ 
-      x: -y * 20,
-      y: x * 20
-    });
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    setRotation({ x: 10, y: -15 });
-  };
-
+// ─── Hero ──────────────────────────────────────────────────────────────────
+function Hero() {
   return (
-    <div className="relative z-10 hidden lg:flex justify-center items-center w-full h-[400px]">
-      <div className="absolute w-[300px] h-[300px] bg-[#c8a96e] bg-opacity-15 blur-[60px] rounded-full animate-pulse" />
-      
-      <div 
-        ref={cardRef}
-        className="perspective-[1200px] w-[380px] h-[240px] cursor-pointer"
-        onMouseMove={handleMouseMove}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={handleMouseLeave}
-      >
-        <div 
-          className="w-full h-full relative transition-transform duration-200 ease-out"
-          style={{ 
-            transformStyle: 'preserve-3d',
-            transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
-            transition: isHovered ? 'transform 0.1s ease-out' : 'transform 0.6s ease-out'
-          }}
-        >
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#1a1508] via-[#0f0d08] to-[#1a1508] border border-[#c8a96e] border-opacity-30 p-8 flex flex-col justify-between shadow-2xl overflow-hidden backface-hidden">
-            <div className="absolute -top-16 -right-16 w-48 h-48 bg-[#c8a96e] opacity-10 rounded-full blur-2xl" />
-            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-[#c8a96e] opacity-10 rounded-full blur-2xl" />
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white dark:bg-black pt-20">
+      {/* Background grain + glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-amber-400/10 dark:bg-amber-500/10 blur-[120px]"/>
+        <div className="absolute top-1/2 right-0 w-[400px] h-[400px] rounded-full bg-blue-400/5 dark:bg-blue-400/5 blur-[100px]"/>
+        <svg className="absolute inset-0 w-full h-full opacity-[0.03] dark:opacity-[0.04]" xmlns="http://www.w3.org/2000/svg"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#noise)"/></svg>
+      </div>
 
-            <div className="flex justify-between items-start relative z-10">
-              <div className="font-['Syne'] font-extrabold text-xl text-[#c8a96e] tracking-tight">DimaCard</div>
-              <div className="flex gap-1 items-center opacity-70">
-                <div className="w-2.5 h-2.5 border-2 border-[#c8a96e] rounded-full animate-ping" style={{ animationDuration: '2s' }} />
-                <div className="w-4 h-4 border-2 border-[#c8a96e] rounded-full absolute" />
-                <div className="w-5.5 h-5.5 border-2 border-[#c8a96e] rounded-full absolute opacity-50" />
+      <div className="relative z-10 max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center py-20">
+        {/* Left */}
+        <div className="text-center lg:text-left">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 mb-6 animate-fade-in">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"/>
+            <span className="text-xs font-medium text-amber-700 dark:text-amber-400">The future is contactless</span>
+          </div>
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight text-black dark:text-white mb-6">
+            The Future<br/>of Business<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">Cards.</span>
+          </h1>
+          <p className="text-lg sm:text-xl text-gray-500 dark:text-gray-400 max-w-md mx-auto lg:mx-0 mb-10 leading-relaxed">
+            Share your contact instantly with a single tap. One card. Infinite connections. No paper, no waste, no friction.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+            <a href="#pricing" className="group px-8 py-4 rounded-2xl bg-black dark:bg-white text-white dark:text-black font-semibold text-sm hover:scale-[1.02] transition-all duration-200 shadow-xl shadow-black/20 flex items-center justify-center gap-2">
+              Get your Dimacard
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:translate-x-1 transition-transform"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="#how-it-works" className="px-8 py-4 rounded-2xl border border-gray-200 dark:border-white/15 text-black dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-all duration-200 flex items-center justify-center gap-2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
+              How it works
+            </a>
+          </div>
+          <div className="mt-12 flex items-center gap-6 justify-center lg:justify-start">
+            <div className="flex -space-x-2">
+              {["#F59E0B","#3B82F6","#10B981","#8B5CF6","#EF4444"].map((c,i) => (
+                <div key={i} className="w-8 h-8 rounded-full border-2 border-white dark:border-black" style={{background:c}}/>
+              ))}
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400"><strong className="text-black dark:text-white">2,400+</strong> professionals trust Dimacard</p>
+          </div>
+        </div>
+
+        {/* Right – card mockup */}
+        <div className="relative flex justify-center lg:justify-end">
+          <div className="relative w-80 h-80 sm:w-96 sm:h-96">
+            {/* Floating card */}
+            <div className="absolute inset-0 animate-float">
+              <div className="w-full h-48 rounded-3xl bg-gradient-to-br from-gray-900 to-black shadow-2xl flex flex-col justify-between p-7 border border-white/10 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-amber-500/10 blur-2xl"/>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="w-10 h-7 rounded-md bg-gradient-to-br from-amber-300 to-amber-500 mb-3 opacity-90"/>
+                    <p className="text-white font-bold text-lg tracking-tight">Alex Morgan</p>
+                    <p className="text-gray-400 text-xs">Product Designer · Dimacard</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white" opacity="0.8"><path d="M11 1H4a2 2 0 00-2 2v18a2 2 0 002 2h7v-2H4V3h7V1zM13 1v2h7v18h-7v2h7a2 2 0 002-2V3a2 2 0 00-2-2h-7z"/></svg>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1">
+                    {[...Array(3)].map((_,i) => <div key={i} className="w-1 h-1 rounded-full bg-amber-400"/>)}
+                  </div>
+                  <span className="text-gray-500 text-xs tracking-widest">NFC ENABLED</span>
+                </div>
               </div>
             </div>
 
-            <div className="relative z-10 mt-8">
-              <div className="font-['Syne'] font-bold text-2xl text-[#f5f0e8] mb-1">Youssef Benali</div>
-              <div className="text-xs text-[#c8a96e] tracking-widest uppercase">Directeur Commercial</div>
+            {/* Phone mockup */}
+            <div className="absolute bottom-0 right-4 w-40 animate-float-delayed">
+              <div className="w-full bg-gray-900 rounded-[2rem] p-2 shadow-2xl border border-white/10">
+                <div className="bg-white dark:bg-gray-100 rounded-[1.5rem] overflow-hidden aspect-[9/16] flex flex-col">
+                  <div className="bg-black h-6 flex items-center justify-center">
+                    <div className="w-16 h-1.5 bg-gray-800 rounded-full"/>
+                  </div>
+                  <div className="flex-1 p-3 bg-gradient-to-b from-gray-50 to-white">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 mx-auto mb-2 shadow-md"/>
+                    <div className="text-center">
+                      <div className="h-2 w-20 bg-gray-800 rounded mx-auto mb-1"/>
+                      <div className="h-1.5 w-16 bg-gray-300 rounded mx-auto mb-3"/>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1 mb-2">
+                      {[...Array(6)].map((_,i) => <div key={i} className="h-6 rounded-lg bg-gray-100"/>)}
+                    </div>
+                    <div className="h-6 rounded-lg bg-amber-400/20 border border-amber-300/50"/>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="flex justify-between items-end relative z-10 mt-6">
-              <div className="text-[10px] text-[#f5f0e8] opacity-50 leading-relaxed">
-                youssef@company.ma<br />
-                +212 6 XX XX XX XX
-              </div>
-              <div className="w-10 h-10 bg-[#c8a96e] opacity-80 grid grid-cols-5 gap-0.5 p-1 rounded-sm">
-                {Array.from({ length: 25 }).map((_, i) => (
-                  <div key={i} className={`rounded-sm ${Math.random() > 0.5 ? 'bg-[#080808]' : 'bg-transparent'}`} />
-                ))}
+            {/* NFC ring */}
+            <div className="absolute top-8 right-0 w-16 h-16 animate-ping-slow">
+              <div className="w-full h-full rounded-full border-2 border-amber-400/40 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full border-2 border-amber-400/60 flex items-center justify-center">
+                  <div className="w-4 h-4 rounded-full bg-amber-400/80"/>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Scroll indicator */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-40">
+        <span className="text-xs tracking-widest uppercase text-gray-400">Scroll</span>
+        <div className="w-px h-10 bg-gradient-to-b from-gray-400 to-transparent animate-pulse"/>
+      </div>
+    </section>
   );
-};
+}
 
-// --- MAIN APP COMPONENT ---
-const App = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
+// ─── Features ─────────────────────────────────────────────────────────────
+const features = [
+  { icon: "📡", title: "NFC Tap to Share", desc: "One tap transfers your full profile — name, links, socials — to any smartphone in seconds. No apps needed." },
+  { icon: "📷", title: "QR Code Sharing", desc: "No NFC? No problem. Your unique QR code lets anyone scan and save your info instantly." },
+  { icon: "📱", title: "Works on All Phones", desc: "Compatible with iPhone, Android, and every modern smartphone. 100% cross-platform." },
+  { icon: "🌱", title: "Eco Friendly", desc: "One Dimacard replaces thousands of paper cards. Better for your network and the planet." },
+  { icon: "🎨", title: "Custom Design", desc: "Fully personalized cards with your logo, brand colors, and identity — premium matte or glossy finish." },
+  { icon: "⚡", title: "Real-Time Updates", desc: "Update your profile anytime. Your contacts always get the latest info — no reprinting ever." },
+];
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
+function Features() {
+  const [ref, inView] = useInView();
   return (
-    <div className="min-h-screen bg-[#080808] text-[#f5f0e8] font-sans selection:bg-[#c8a96e] selection:text-[#080808] relative overflow-x-hidden">
-      
-      <style>
-        {`
-          @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;1,300;1,400&display=swap');
-          body { font-family: 'DM Sans', sans-serif; cursor: none; }
-          h1, h2, h3, .font-syne { font-family: 'Syne', sans-serif; }
-        `}
-      </style>
-
-      {/* Noise Overlay */}
-      <div 
-        className="fixed inset-0 pointer-events-none z-[100] opacity-40 mix-blend-overlay"
-        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E")` }}
-      />
-
-      <CustomCursor />
-
-      {/* NAVIGATION */}
-      <nav className={`fixed top-0 left-0 right-0 z-[500] flex justify-between items-center px-6 md:px-12 py-5 transition-all duration-300 ${isScrolled ? 'bg-[#080808]/80 backdrop-blur-md border-b border-[#c8a96e]/10 py-4' : 'bg-transparent'}`}>
-        <div className="font-syne font-extrabold text-2xl tracking-tight text-[#f5f0e8]">
-          Dima<span className="text-[#c8a96e]">Card</span>
+    <section id="features" ref={ref} className="py-28 bg-gray-50 dark:bg-gray-950">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className={`text-center mb-16 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+          <span className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-4 block">Why Dimacard</span>
+          <h2 className="text-4xl sm:text-5xl font-black text-black dark:text-white leading-tight mb-4">Everything you need.<br/>Nothing you don't.</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-lg max-w-xl mx-auto">Designed for modern professionals who move fast and leave lasting impressions.</p>
         </div>
-        <ul className="hidden md:flex gap-10 items-center">
-          <li><a href="#features" className="text-sm font-medium tracking-widest uppercase text-[#f5f0e8]/60 hover:text-[#c8a96e] transition-colors">Fonctionnalités</a></li>
-          <li><a href="#how-it-works" className="text-sm font-medium tracking-widest uppercase text-[#f5f0e8]/60 hover:text-[#c8a96e] transition-colors">Processus</a></li>
-          <li><a href="#pricing" className="text-sm font-medium tracking-widest uppercase text-[#f5f0e8]/60 hover:text-[#c8a96e] transition-colors">Tarifs</a></li>
-        </ul>
-        <button className="font-syne font-bold text-xs tracking-widest uppercase bg-[#c8a96e] text-[#080808] px-6 py-3 hover:bg-[#e8c98e] hover:-translate-y-0.5 transition-all cursor-none">
-          Commander
-        </button>
-      </nav>
-
-      {/* HERO SECTION */}
-      <section className="relative min-h-screen flex items-center px-6 md:px-12 pt-32 pb-20 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_70%_50%,rgba(200,169,110,0.08)_0%,transparent_70%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_40%_60%_at_20%_80%,rgba(200,169,110,0.04)_0%,transparent_60%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(200,169,110,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(200,169,110,0.03)_1px,transparent_1px)] bg-[size:80px_80px] [mask-image:radial-gradient(ellipse_80%_80%_at_70%_50%,black_0%,transparent_80%)]" />
-
-        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
-          <div>
-            <Reveal delay={0}>
-              <div className="inline-flex items-center gap-2 border border-[#c8a96e]/20 bg-[#c8a96e]/5 px-4 py-2 text-xs tracking-[0.15em] uppercase text-[#c8a96e] mb-10">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#c8a96e] animate-pulse" />
-                Technologie NFC
-              </div>
-            </Reveal>
-            <Reveal delay={100}>
-              <h1 className="font-syne font-extrabold text-[3rem] md:text-[5vw] leading-[0.95] tracking-tight mb-8">
-                La carte<br/>qui parle<br/>
-                <span className="text-[#c8a96e] italic font-normal">pour vous.</span>
-              </h1>
-            </Reveal>
-            <Reveal delay={200}>
-              <p className="text-lg font-light text-[#f5f0e8]/60 leading-relaxed max-w-md mb-12">
-                DimaCard transforme votre identité professionnelle en une expérience numérique instantanée. Un tap suffit pour marquer les esprits.
-              </p>
-            </Reveal>
-            <Reveal delay={300}>
-              <div className="flex flex-wrap gap-5 items-center">
-                <button className="font-syne font-bold text-sm tracking-wider uppercase bg-[#c8a96e] text-[#080808] px-10 py-5 hover:-translate-y-1 transition-transform relative overflow-hidden group cursor-none">
-                  <span className="relative z-10">Commander ma carte</span>
-                  <div className="absolute inset-0 bg-[#e8c98e] translate-y-[100%] group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-                </button>
-                <a href="#how-it-works" className="font-syne font-semibold text-sm tracking-wider text-[#f5f0e8] border border-[#c8a96e]/20 px-10 py-5 hover:border-[#c8a96e] hover:text-[#c8a96e] transition-colors cursor-none">
-                  Comment ça marche
-                </a>
-              </div>
-            </Reveal>
-          </div>
-          
-          <TiltCard />
-        </div>
-      </section>
-
-      {/* STATS */}
-      <section className="border-y border-[#c8a96e]/10 mx-6 md:mx-12">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-[#c8a96e]/10">
-          {[
-            { num: "10K+", label: "Cartes actives" },
-            { num: "98%", label: "Satisfaction" },
-            { num: "3s", label: "Temps de partage" },
-            { num: "∞", label: "Mises à jour" }
-          ].map((stat, i) => (
-            <Reveal key={i} delay={i * 100} className="py-12 px-6 text-center">
-              <div className="font-syne font-extrabold text-4xl md:text-5xl text-[#c8a96e] mb-2">{stat.num}</div>
-              <div className="text-xs tracking-widest uppercase text-[#f5f0e8]/40">{stat.label}</div>
-            </Reveal>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {features.map((f, i) => (
+            <div key={i} className={`group p-7 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/5 hover:border-amber-200 dark:hover:border-amber-500/20 hover:shadow-xl transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`} style={{ transitionDelay: `${i * 80}ms` }}>
+              <div className="text-3xl mb-4 group-hover:scale-110 transition-transform duration-300 inline-block">{f.icon}</div>
+              <h3 className="font-bold text-base text-black dark:text-white mb-2">{f.title}</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{f.desc}</p>
+            </div>
           ))}
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      {/* FEATURES */}
-      <section id="features" className="py-32 px-6 md:px-12 max-w-7xl mx-auto">
-        <Reveal>
-          <div className="flex items-center gap-3 text-xs tracking-[0.2em] uppercase text-[#c8a96e] mb-5">
-            Fonctionnalités <div className="h-[1px] w-10 bg-[#c8a96e]/50" />
-          </div>
-          <h2 className="font-syne font-extrabold text-4xl md:text-6xl tracking-tight mb-16">
-            Tout ce dont<br/>vous avez besoin.
-          </h2>
-        </Reveal>
+// ─── How It Works ─────────────────────────────────────────────────────────
+const steps = [
+  { n: "01", icon: "🪄", title: "Tap your Dimacard", desc: "Hold your Dimacard near any phone. The NFC chip activates instantly — no unlocking, no searching." },
+  { n: "02", icon: "⚡", title: "Profile opens instantly", desc: "Your beautiful digital profile appears in the browser. Name, role, links, and contact info all in one place." },
+  { n: "03", icon: "🤝", title: "Share & connect", desc: "They save your contact, follow your socials, or visit your site — all from one seamless tap." },
+];
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[1px] bg-[#c8a96e]/10 border border-[#c8a96e]/10">
-          {[
-            { 
-              icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>, 
-              title: "Partage instantané", desc: "Un simple tap sur n'importe quel smartphone NFC. Aucune app requise. Fonctionne avec iOS et Android." 
-            },
-            { 
-              icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>, 
-              title: "Profil personnalisable", desc: "Vos liens, vos réseaux, votre portfolio. Modifiez votre profil digital en temps réel depuis votre tableau de bord." 
-            },
-            { 
-              icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>, 
-              title: "Analytics avancés", desc: "Suivez vos vues, taps et clics. Sachez exactement qui a consulté votre profil et depuis quel appareil." 
-            },
-            { 
-              icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>, 
-              title: "Design premium", desc: "Carte en métal brossé, PVC haut de gamme ou bambou eco-friendly. Votre image, sublimée à chaque instant." 
-            },
-            { 
-              icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>, 
-              title: "CRM intégré", desc: "Synchronisez automatiquement vos nouveaux contacts avec Salesforce, HubSpot ou votre CRM préféré." 
-            },
-            { 
-              icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>, 
-              title: "QR Code inclus", desc: "Pour les appareils très anciens sans NFC, votre QR Code est automatiquement généré et toujours à jour." 
-            }
-          ].map((feat, i) => (
-            <Reveal key={i} delay={i * 50}>
-              <div className="bg-[#080808] p-10 h-full relative group hover:bg-[#c8a96e]/[0.02] transition-colors overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#c8a96e] to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-                <div className="absolute top-6 right-8 font-syne font-extrabold text-6xl text-[#c8a96e]/5 pointer-events-none">
-                  0{i+1}
-                </div>
-                <div className="w-12 h-12 border border-[#c8a96e]/20 flex items-center justify-center text-[#f5f0e8]/80 mb-8 group-hover:border-[#c8a96e] group-hover:bg-[#c8a96e]/10 group-hover:text-[#c8a96e] transition-all">
-                  {feat.icon}
-                </div>
-                <h3 className="font-syne font-bold text-xl mb-4">{feat.title}</h3>
-                <p className="text-sm font-light text-[#f5f0e8]/50 leading-relaxed">{feat.desc}</p>
+function HowItWorks() {
+  const [ref, inView] = useInView();
+  return (
+    <section id="how-it-works" ref={ref} className="py-28 bg-white dark:bg-black overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className={`text-center mb-20 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+          <span className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-4 block">Simple as 1-2-3</span>
+          <h2 className="text-4xl sm:text-5xl font-black text-black dark:text-white">How it works</h2>
+        </div>
+        <div className="relative grid md:grid-cols-3 gap-8">
+          {/* Connector line */}
+          <div className="hidden md:block absolute top-10 left-1/6 right-1/6 h-px bg-gradient-to-r from-transparent via-amber-300/60 to-transparent"/>
+          {steps.map((s, i) => (
+            <div key={i} className={`relative text-center transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"}`} style={{ transitionDelay: `${i * 150}ms` }}>
+              <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/10 border border-amber-200/60 dark:border-amber-700/30 mb-6 shadow-xl">
+                <span className="text-3xl">{s.icon}</span>
+                <span className="absolute -top-3 -right-3 w-7 h-7 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-black flex items-center justify-center">{s.n}</span>
               </div>
-            </Reveal>
+              <h3 className="font-bold text-xl text-black dark:text-white mb-3">{s.title}</h3>
+              <p className="text-gray-500 dark:text-gray-400 leading-relaxed text-sm max-w-xs mx-auto">{s.desc}</p>
+            </div>
           ))}
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      {/* HOW IT WORKS (WITH PHONE MOCKUP) */}
-      <section id="how-it-works" className="py-32 px-6 md:px-12 bg-[#c8a96e]/[0.02] border-y border-[#c8a96e]/10">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-          <div>
-            <Reveal>
-              <div className="flex items-center gap-3 text-xs tracking-[0.2em] uppercase text-[#c8a96e] mb-5">
-                Processus <div className="h-[1px] w-10 bg-[#c8a96e]/50" />
+// ─── Product Showcase ──────────────────────────────────────────────────────
+function Showcase() {
+  const [ref, inView] = useInView();
+  return (
+    <section className="py-28 bg-black overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className={`text-center mb-16 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`} ref={ref}>
+          <span className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-4 block">Product</span>
+          <h2 className="text-4xl sm:text-5xl font-black text-white mb-4">Crafted to impress</h2>
+          <p className="text-gray-500 text-lg max-w-xl mx-auto">Premium materials. Digital intelligence. Physical elegance.</p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Card */}
+          <div className={`group p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-amber-500/30 transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`} style={{ transitionDelay: "0ms" }}>
+            <div className="w-full aspect-video rounded-2xl bg-gradient-to-br from-gray-800 to-black border border-white/10 mb-6 flex items-center justify-center relative overflow-hidden shadow-2xl">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent"/>
+              <div className="text-center">
+                <div className="w-16 h-11 rounded-lg bg-gradient-to-br from-amber-300 to-amber-600 mx-auto mb-3 shadow-xl opacity-90"/>
+                <p className="text-white font-bold text-sm">Alex Morgan</p>
+                <p className="text-gray-500 text-xs">alex@company.com</p>
               </div>
-              <h2 className="font-syne font-extrabold text-4xl md:text-6xl tracking-tight mb-16">
-                Simple.<br/>Rapide. Élégant.
-              </h2>
-            </Reveal>
+            </div>
+            <h3 className="text-white font-bold text-lg mb-2">NFC Business Card</h3>
+            <p className="text-gray-500 text-sm leading-relaxed">Premium black matte finish with embedded NFC chip and gold foil accents.</p>
+          </div>
+          {/* Profile */}
+          <div className={`group p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-amber-500/30 transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`} style={{ transitionDelay: "120ms" }}>
+            <div className="w-full aspect-video rounded-2xl bg-gradient-to-b from-gray-100 to-white mb-6 flex items-center justify-center overflow-hidden shadow-2xl">
+              <div className="w-full h-full p-4 flex flex-col items-center justify-center gap-2">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg"/>
+                <div className="text-center">
+                  <p className="text-gray-900 font-bold text-sm">Alex Morgan</p>
+                  <p className="text-gray-400 text-xs">Product Designer</p>
+                </div>
+                <div className="flex gap-2">
+                  {["🔗","in","𝕏"].map((ic, i) => (
+                    <div key={i} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-xs">{ic}</div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <h3 className="text-white font-bold text-lg mb-2">Digital Profile</h3>
+            <p className="text-gray-500 text-sm leading-relaxed">Beautiful mobile-optimized profile page with all your links in one place.</p>
+          </div>
+          {/* QR */}
+          <div className={`group p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-amber-500/30 transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`} style={{ transitionDelay: "240ms" }}>
+            <div className="w-full aspect-video rounded-2xl bg-white mb-6 flex items-center justify-center shadow-2xl">
+              <div className="grid grid-cols-7 gap-0.5 p-4">
+                {[...Array(49)].map((_, i) => (
+                  <div key={i} className={`w-3 h-3 rounded-sm ${Math.random() > 0.5 ? "bg-black" : "bg-transparent"}`}
+                    style={{ background: ([0,1,2,3,4,5,6,7,13,14,20,21,27,28,42,43,44,45,46,47,48].includes(i) ? "#000" : Math.random() > 0.5 ? "#000" : "#fff") }}
+                  />
+                ))}
+              </div>
+            </div>
+            <h3 className="text-white font-bold text-lg mb-2">QR Code Sharing</h3>
+            <p className="text-gray-500 text-sm leading-relaxed">Scan anywhere — works offline, in print materials, or on your email signature.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
-            <div className="space-y-12">
-              {[
-                { step: "01", title: "Commandez votre carte", desc: "Choisissez votre matière, personnalisez le design avec votre identité visuelle. Livraison rapide." },
-                { step: "02", title: "Créez votre profil digital", desc: "Depuis votre espace DimaCard, renseignez vos infos, ajoutez vos liens et personnalisez votre page." },
-                { step: "03", title: "Tappez et partagez", desc: "Approchez votre carte d'un smartphone. En 3 secondes, votre contact reçoit toutes vos informations." }
-              ].map((item, i) => (
-                <Reveal key={i} delay={i * 100} className="flex gap-6">
-                  <div className="font-syne font-extrabold text-sm text-[#c8a96e] tracking-widest pt-1">{item.step}</div>
-                  <div>
-                    <h3 className="font-syne font-bold text-lg mb-2">{item.title}</h3>
-                    <p className="text-sm font-light text-[#f5f0e8]/50 leading-relaxed max-w-sm">{item.desc}</p>
-                  </div>
-                </Reveal>
+// ─── For Who ───────────────────────────────────────────────────────────────
+const audiences = [
+  { emoji: "🚀", role: "Entrepreneurs", desc: "Make a bold first impression at every pitch and networking event." },
+  { emoji: "💼", role: "Sales Teams", desc: "Close deals faster. Share your info and track every connection." },
+  { emoji: "🏢", role: "Companies", desc: "Brand your entire team with a unified digital identity." },
+  { emoji: "🎨", role: "Freelancers", desc: "Showcase your portfolio and get hired in one seamless tap." },
+];
+
+function ForWho() {
+  const [ref, inView] = useInView();
+  return (
+    <section className="py-28 bg-gray-50 dark:bg-gray-950" ref={ref}>
+      <div className="max-w-7xl mx-auto px-6">
+        <div className={`text-center mb-16 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+          <span className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-4 block">Built for everyone</span>
+          <h2 className="text-4xl sm:text-5xl font-black text-black dark:text-white">Who uses Dimacard?</h2>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {audiences.map((a, i) => (
+            <div key={i} className={`group text-center p-8 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/5 hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`} style={{ transitionDelay: `${i * 100}ms` }}>
+              <div className="text-4xl mb-5 group-hover:scale-125 transition-transform duration-300 inline-block">{a.emoji}</div>
+              <h3 className="font-bold text-black dark:text-white mb-2">{a.role}</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{a.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Pricing ───────────────────────────────────────────────────────────────
+const plans = [
+  {
+    name: "Starter", price: "29", period: "one-time", popular: false,
+    features: ["1 NFC Card", "Digital profile page", "QR code sharing", "Basic analytics", "Email support"],
+    cta: "Get Started",
+  },
+  {
+    name: "Pro", price: "59", period: "one-time", popular: true,
+    features: ["1 Premium NFC Card", "Custom profile design", "Custom domain link", "Advanced analytics", "Priority support", "Unlimited updates"],
+    cta: "Get Pro",
+  },
+  {
+    name: "Business", price: "199", period: "per team / year", popular: false,
+    features: ["10 NFC Cards", "Team dashboard", "Brand customization", "CRM integrations", "Team analytics", "Dedicated manager"],
+    cta: "Contact Sales",
+  },
+];
+
+function Pricing() {
+  const [ref, inView] = useInView();
+  return (
+    <section id="pricing" ref={ref} className="py-28 bg-white dark:bg-black">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className={`text-center mb-16 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+          <span className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-4 block">Simple Pricing</span>
+          <h2 className="text-4xl sm:text-5xl font-black text-black dark:text-white mb-4">Invest once.<br/>Connect forever.</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-lg">No subscriptions. No reprinting. Just results.</p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6 items-start max-w-5xl mx-auto">
+          {plans.map((p, i) => (
+            <div key={i} className={`relative rounded-3xl p-8 border transition-all duration-700 ${p.popular ? "bg-black dark:bg-white border-black dark:border-white shadow-2xl scale-[1.03]" : "bg-white dark:bg-gray-900 border-gray-100 dark:border-white/5 hover:shadow-xl"} ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`} style={{ transitionDelay: `${i * 100}ms` }}>
+              {p.popular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-amber-500 text-white text-xs font-bold">Most Popular</div>}
+              <h3 className={`font-bold text-lg mb-1 ${p.popular ? "text-white dark:text-black" : "text-black dark:text-white"}`}>{p.name}</h3>
+              <div className="mb-6">
+                <span className={`text-5xl font-black ${p.popular ? "text-white dark:text-black" : "text-black dark:text-white"}`}>${p.price}</span>
+                <span className={`text-sm ml-2 ${p.popular ? "text-gray-300 dark:text-gray-600" : "text-gray-400"}`}>{p.period}</span>
+              </div>
+              <ul className="space-y-3 mb-8">
+                {p.features.map((f, j) => (
+                  <li key={j} className={`flex items-center gap-3 text-sm ${p.popular ? "text-gray-300 dark:text-gray-700" : "text-gray-600 dark:text-gray-400"}`}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={p.popular ? "#F59E0B" : "#10B981"} strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <button className={`w-full py-3.5 rounded-2xl font-semibold text-sm transition-all duration-200 ${p.popular ? "bg-amber-500 text-white hover:bg-amber-400" : "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200"}`}>
+                {p.cta}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Testimonials ──────────────────────────────────────────────────────────
+const testimonials = [
+  { name: "Sarah Chen", role: "UX Designer @ Figma", avatar: "SC", text: "I've handed out over 500 paper cards in my career. Since switching to Dimacard, I get more follow-ups than ever — people actually remember me." },
+  { name: "Marcus Reid", role: "Founder @ Buildify", avatar: "MR", text: "Closed three deals at a conference last month just by tapping my card. The wow factor alone is worth every penny." },
+  { name: "Priya Nair", role: "Head of Sales @ Stripe", avatar: "PN", text: "We rolled out Dimacard for our entire team. Onboarding was instant and our leads have gone up 40%. It's a no-brainer." },
+  { name: "Tom Krause", role: "Freelance Developer", avatar: "TK", text: "Minimal, clean, effective. My portfolio link opens immediately when someone taps the card. No app needed. Just magic." },
+];
+
+function Testimonials() {
+  const [ref, inView] = useInView();
+  const colors = ["#F59E0B","#3B82F6","#10B981","#8B5CF6"];
+  return (
+    <section id="testimonials" ref={ref} className="py-28 bg-gray-50 dark:bg-gray-950">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className={`text-center mb-16 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+          <span className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-4 block">Social Proof</span>
+          <h2 className="text-4xl sm:text-5xl font-black text-black dark:text-white">People love Dimacard</h2>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {testimonials.map((t, i) => (
+            <div key={i} className={`p-7 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/5 transition-all duration-700 hover:shadow-xl ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`} style={{ transitionDelay: `${i * 100}ms` }}>
+              <div className="flex mb-4">
+                {[...Array(5)].map((_,s) => <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
+              </div>
+              <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-6">"{t.text}"</p>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: colors[i] }}>{t.avatar}</div>
+                <div>
+                  <p className="font-semibold text-sm text-black dark:text-white">{t.name}</p>
+                  <p className="text-gray-400 text-xs">{t.role}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── CTA ───────────────────────────────────────────────────────────────────
+function CTA() {
+  const [ref, inView] = useInView();
+  return (
+    <section className="py-28 bg-black relative overflow-hidden" ref={ref}>
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-[120px]"/>
+        <div className="absolute top-0 left-0 w-64 h-64 rounded-full bg-amber-600/5 blur-[80px]"/>
+      </div>
+      <div className={`relative z-10 max-w-3xl mx-auto px-6 text-center transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+        <span className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-4 block">Ready to upgrade?</span>
+        <h2 className="text-5xl sm:text-6xl font-black text-white mb-6 leading-tight">Upgrade your networking<br/>with <span className="text-amber-400">Dimacard</span>.</h2>
+        <p className="text-gray-400 text-xl mb-10">Join 2,400+ professionals already making smarter connections.</p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="#pricing" className="group px-8 py-4 rounded-2xl bg-amber-500 text-white font-bold text-sm hover:bg-amber-400 transition-all duration-200 shadow-xl shadow-amber-500/20 flex items-center justify-center gap-2">
+            Get your Dimacard
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:translate-x-1 transition-transform"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="mailto:hello@dimacard.io" className="px-8 py-4 rounded-2xl border border-white/15 text-white font-semibold text-sm hover:bg-white/5 transition-all duration-200 flex items-center justify-center gap-2">
+            Talk to us
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Footer ────────────────────────────────────────────────────────────────
+function Footer() {
+  return (
+    <footer className="bg-black border-t border-white/10 py-16">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid md:grid-cols-4 gap-12 mb-12">
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7v10l10 5 10-5V7L12 2z" fill="white"/></svg>
+              </div>
+              <span className="font-bold text-white">Dima<span className="text-amber-500">card</span></span>
+            </div>
+            <p className="text-gray-500 text-sm leading-relaxed mb-5">The smartest NFC business card for modern professionals.</p>
+            <div className="flex gap-3">
+              {["𝕏","in","ig","fb"].map((s, i) => (
+                <a key={i} href="#" className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-xs text-gray-400 hover:text-white transition-colors">{s}</a>
               ))}
             </div>
           </div>
-
-          {/* PHONE MOCKUP */}
-          <Reveal delay={300} className="flex justify-center relative">
-            <div className="absolute bottom-[-20px] w-48 h-20 bg-[#c8a96e]/20 blur-[40px] rounded-full" />
-            <div className="w-[260px] bg-[#111] rounded-[40px] border-[3px] border-[#c8a96e]/20 shadow-2xl relative animate-[float_6s_ease-in-out_infinite]">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-[#111] rounded-b-xl z-20" />
-              <div className="bg-[#080808] m-1.5 rounded-[32px] h-[520px] border border-[#c8a96e]/10 overflow-hidden relative">
-                
-                {/* Phone Content (Digital Profile) */}
-                <div className="p-6 pt-16 flex flex-col items-center">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#8a6f3e] to-[#c8a96e] flex items-center justify-center font-syne font-extrabold text-3xl text-[#080808] mb-4 shadow-lg">
-                    YB
-                  </div>
-                  <h4 className="font-syne font-bold text-lg mb-1">Youssef Benali</h4>
-                  <p className="text-[10px] text-[#c8a96e] tracking-widest uppercase mb-8">Directeur Commercial</p>
-                  
-                  <div className="w-full space-y-3">
-                    <button className="w-full py-3 bg-[#c8a96e]/10 border border-[#c8a96e]/20 rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-[#c8a96e]/20 transition-colors">
-                      Enregistrer le contact <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                    </button>
-                    <div className="flex flex-col gap-2 pt-4">
-                      <div className="w-full p-3 bg-[#111] rounded-xl text-xs flex items-center gap-3 text-[#f5f0e8]/70">
-                        <svg className="text-[#c8a96e]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> youssef@company.ma
-                      </div>
-                      <div className="w-full p-3 bg-[#111] rounded-xl text-xs flex items-center gap-3 text-[#f5f0e8]/70">
-                        <svg className="text-[#c8a96e]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg> +212 6 XX XX XX XX
-                      </div>
-                      <div className="w-full p-3 bg-[#111] rounded-xl text-xs flex items-center gap-3 text-[#f5f0e8]/70">
-                        <svg className="text-[#c8a96e]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg> @youssef.benali
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
+          {[
+            { title: "Product", links: ["Features", "Pricing", "How it works", "Showcase"] },
+            { title: "Company", links: ["About", "Blog", "Careers", "Press"] },
+            { title: "Legal", links: ["Privacy Policy", "Terms of Service", "Cookie Policy", "GDPR"] },
+          ].map((col, i) => (
+            <div key={i}>
+              <h4 className="text-white font-semibold text-sm mb-4">{col.title}</h4>
+              <ul className="space-y-3">
+                {col.links.map(l => <li key={l}><a href="#" className="text-gray-500 hover:text-white text-sm transition-colors">{l}</a></li>)}
+              </ul>
             </div>
-            <style dangerouslySetInnerHTML={{__html: `
-              @keyframes float {
-                0%, 100% { transform: translateY(0) rotate(-2deg); }
-                50% { transform: translateY(-15px) rotate(-1deg); }
-              }
-            `}} />
-          </Reveal>
+          ))}
         </div>
-      </section>
-
-      {/* PRICING */}
-      <section id="pricing" className="py-32 px-6 md:px-12 max-w-7xl mx-auto">
-        <Reveal className="text-center mb-20">
-          <div className="inline-flex items-center gap-3 text-xs tracking-[0.2em] uppercase text-[#c8a96e] mb-5">
-            <div className="h-[1px] w-10 bg-[#c8a96e]/50" /> Tarifs <div className="h-[1px] w-10 bg-[#c8a96e]/50" />
-          </div>
-          <h2 className="font-syne font-extrabold text-4xl md:text-5xl tracking-tight">Investissement unique.</h2>
-        </Reveal>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-[1px] bg-[#c8a96e]/10 border border-[#c8a96e]/10">
-          
-          {/* Plan 1 */}
-          <Reveal delay={0} className="bg-[#080808] p-10 hover:bg-[#111] transition-colors">
-            <h3 className="font-syne font-bold text-xs tracking-[0.15em] uppercase text-[#c8a96e] mb-6">Essentiel</h3>
-            <div className="font-syne font-extrabold text-5xl mb-2">199<span className="text-2xl text-[#f5f0e8]/50">DH</span></div>
-            <p className="text-xs text-[#f5f0e8]/40 mb-10">Paiement unique</p>
-            <ul className="space-y-4 mb-10">
-              {['1 carte NFC PVC', 'Profil digital illimité', 'QR Code inclus', 'Analytics basiques', 'Support email'].map((feat, i) => (
-                <li key={i} className="text-sm font-light text-[#f5f0e8]/70 flex items-center gap-3 border-b border-[#c8a96e]/5 pb-3">
-                  <svg className="text-[#c8a96e] min-w-[14px]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> {feat}
-                </li>
-              ))}
-            </ul>
-            <button className="w-full py-4 border border-[#c8a96e]/30 font-syne font-bold text-xs tracking-widest uppercase hover:border-[#c8a96e] hover:text-[#c8a96e] transition-colors cursor-none">
-              Commencer
-            </button>
-          </Reveal>
-
-          {/* Plan 2 (Featured) */}
-          <Reveal delay={100} className="bg-[#c8a96e]/5 p-10 relative">
-            <div className="absolute top-6 right-6 bg-[#c8a96e] text-[#080808] text-[10px] font-bold px-3 py-1 uppercase tracking-widest">Populaire</div>
-            <h3 className="font-syne font-bold text-xs tracking-[0.15em] uppercase text-[#c8a96e] mb-6">Pro</h3>
-            <div className="font-syne font-extrabold text-5xl mb-2">349<span className="text-2xl text-[#f5f0e8]/50">DH</span></div>
-            <p className="text-xs text-[#f5f0e8]/40 mb-10">Paiement unique</p>
-            <ul className="space-y-4 mb-10">
-              {['1 carte NFC Métal', 'Profil digital avancé', 'QR Code dynamique', 'Analytics complets', 'Intégrations CRM'].map((feat, i) => (
-                <li key={i} className="text-sm font-light text-[#f5f0e8]/70 flex items-center gap-3 border-b border-[#c8a96e]/5 pb-3">
-                  <svg className="text-[#c8a96e] min-w-[14px]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> {feat}
-                </li>
-              ))}
-            </ul>
-            <button className="w-full py-4 bg-[#c8a96e] text-[#080808] font-syne font-bold text-xs tracking-widest uppercase hover:bg-[#e8c98e] hover:-translate-y-1 transition-transform cursor-none">
-              Commander
-            </button>
-          </Reveal>
-
-          {/* Plan 3 */}
-          <Reveal delay={200} className="bg-[#080808] p-10 hover:bg-[#111] transition-colors">
-            <h3 className="font-syne font-bold text-xs tracking-[0.15em] uppercase text-[#c8a96e] mb-6">Équipe</h3>
-            <div className="font-syne font-extrabold text-4xl mb-2 mt-2">Sur devis</div>
-            <p className="text-xs text-[#f5f0e8]/40 mb-10 mt-4">À partir de 5 cartes</p>
-            <ul className="space-y-4 mb-10">
-              {['Cartes personnalisées', 'Dashboard équipe', 'Branding entreprise', 'Accès API', 'Account manager dédié'].map((feat, i) => (
-                <li key={i} className="text-sm font-light text-[#f5f0e8]/70 flex items-center gap-3 border-b border-[#c8a96e]/5 pb-3">
-                  <svg className="text-[#c8a96e] min-w-[14px]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> {feat}
-                </li>
-              ))}
-            </ul>
-            <button className="w-full py-4 border border-[#c8a96e]/30 font-syne font-bold text-xs tracking-widest uppercase hover:border-[#c8a96e] hover:text-[#c8a96e] transition-colors cursor-none">
-              Nous contacter
-            </button>
-          </Reveal>
-
+        <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-gray-600 text-sm">© 2025 Dimacard. All rights reserved.</p>
+          <p className="text-gray-600 text-sm">Made with ❤️ for modern networkers</p>
         </div>
-      </section>
+      </div>
+    </footer>
+  );
+}
 
-      {/* CTA SECTION */}
-      <section className="py-32 px-6 text-center relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(200,169,110,0.1)_0%,transparent_65%)] rounded-full pointer-events-none" />
-        
-        <Reveal>
-          <h2 className="font-syne font-extrabold text-4xl md:text-[5rem] leading-[0.95] tracking-tight mb-8 relative z-10">
-            Prêt à passer<br/>
-            <span className="text-[#c8a96e] italic font-normal">au niveau supérieur ?</span>
-          </h2>
-          <p className="text-lg font-light text-[#f5f0e8]/50 max-w-lg mx-auto mb-12 relative z-10">
-            Rejoignez plus de 10 000 professionnels qui ont déjà transformé leur manière de faire du networking.
-          </p>
-          <div className="flex flex-wrap justify-center gap-5 relative z-10">
-            <button className="font-syne font-bold text-sm tracking-wider uppercase bg-[#c8a96e] text-[#080808] px-10 py-5 hover:bg-[#e8c98e] hover:-translate-y-1 transition-transform cursor-none">
-              Commander DimaCard
-            </button>
-          </div>
-        </Reveal>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="border-t border-[#c8a96e]/10 px-6 md:px-12 py-10 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-[#f5f0e8]/40">
-        <div>© 2026 DimaCard. Tous droits réservés.</div>
-        <ul className="flex gap-8 uppercase tracking-widest">
-          <li><a href="#" className="hover:text-[#c8a96e] transition-colors cursor-none">Confidentialité</a></li>
-          <li><a href="#" className="hover:text-[#c8a96e] transition-colors cursor-none">CGU</a></li>
-          <li><a href="#" className="hover:text-[#c8a96e] transition-colors cursor-none">Contact</a></li>
-        </ul>
-      </footer>
-
+// ─── App ───────────────────────────────────────────────────────────────────
+export default function App() {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+  }, [dark]);
+  return (
+    <div className={`font-sans antialiased ${dark ? "dark" : ""}`}>
+      <Navbar dark={dark} toggleDark={() => setDark(d => !d)} />
+      <Hero />
+      <Features />
+      <HowItWorks />
+      <Showcase />
+      <ForWho />
+      <Pricing />
+      <Testimonials />
+      <CTA />
+      <Footer />
     </div>
   );
-};
-
-export default App;
+}
