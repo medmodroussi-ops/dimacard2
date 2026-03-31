@@ -1,665 +1,735 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import * as Icons from "lucide-react";
 
-// ─── Utility: useInView hook ───────────────────────────────────────────────
-function useInView(threshold = 0.15) {
-  const ref = useRef(null);
-  const [inView, setInView] = useState(false);
+// Import universel pour éviter les erreurs de version
+const { Zap, Smartphone, Share2, Nfc, UserPlus, Mail, Phone, Globe, MapPin, CreditCard, BarChart, Palette, Check, Sparkles, Send, CheckCircle, Loader, ArrowLeft, Briefcase, Building } = Icons;
+const Linkedin = Icons.Linkedin || Icons.LinkedIn || Icons.User;
+
+// ─── BASE DE DONNÉES DES CARTES ──────────────────────────────────────────────
+const productsData = {
+  'matte-black': {
+    id: 'matte-black',
+    name: 'Matte Black',
+    price: '299 DH',
+    tag: 'Best-Seller',
+    desc: 'Finition luxe ultra-résistante. L\'élégance absolue pour les professionnels exigeants.',
+    features: ['Finition Soft-Touch Anti-Rayures', 'Puce NTAG213 Ultra Rapide', 'Fonctionne sans application'],
+    bgGradient: 'linear-gradient(135deg, #1A1A1E 0%, #0A0A0C 100%)',
+    textColor: '#FFFFFF',
+    themeColor: '#00D66B'
+  },
+  'eco-bamboo': {
+    id: 'eco-bamboo',
+    name: 'Eco Bamboo',
+    price: '249 DH',
+    tag: '100% Écologique',
+    desc: 'Bois de bambou véritable gravé au laser. Démarquez-vous tout en respectant l\'environnement.',
+    features: ['Bois de bambou naturel', 'Gravure Laser Inaltérable', 'Texture unique pour chaque carte'],
+    bgGradient: 'linear-gradient(135deg, #C19A6B 0%, #8B5A2B 100%)',
+    textColor: '#3E2723',
+    themeColor: '#00A354'
+  },
+  'premium-metal': {
+    id: 'premium-metal',
+    name: 'Premium Metal',
+    price: '499 DH',
+    tag: 'Édition Limitée',
+    desc: 'Acier inoxydable brossé lourd et imposant. Une carte que vos clients n\'oublieront jamais.',
+    features: ['Acier Inoxydable 18g', 'Finition Or ou Argent brossé', 'Puce isolée anti-interférences'],
+    bgGradient: 'linear-gradient(135deg, #E6C27A 0%, #B8860B 100%)',
+    textColor: '#1A1A1A',
+    themeColor: '#D500F9'
+  }
+};
+
+// ─── STYLES GLOBAUX ──────────────────────────────────────────────────────────
+function GlobalStyles() {
   useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true); }, { threshold });
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, [threshold]);
-  return [ref, inView];
+    const id = "dc-global-styles";
+    if (document.getElementById(id)) return;
+    const s = document.createElement("style");
+    s.id = id;
+    s.textContent = `
+      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&family=Black+Ops+One&display=swap');
+
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --dima-green: #00D66B; 
+        --dima-green-light: #69FFB4;
+        --dima-green-dark: #00A354;
+        --dima-magenta: #D500F9; 
+        
+        --bg-light: #FAFAFA;
+        --bg-white: #FFFFFF;
+        --card-bg: #FFFFFF;
+        --text-main: #0F172A; 
+        --text-muted: #64748B; 
+        --border-light: rgba(0,0,0,0.06);
+        --shadow-soft: 0 10px 40px rgba(0,0,0,0.05);
+        
+        --font-display: 'Outfit', sans-serif;
+        --font-body: 'DM Sans', sans-serif;
+        --font-logo: 'Black Ops One', cursive;
+      }
+
+      html { scroll-behavior: smooth; background: var(--bg-light); overflow-x: hidden; }
+      body { font-family: var(--font-body); background: var(--bg-light); color: var(--text-main); overflow-x: hidden; perspective: 1000px; width: 100%; }
+
+      /* Animations */
+      @keyframes float3D { 0%, 100% { transform: translateY(0) rotateX(15deg) rotateY(-15deg); } 50% { transform: translateY(-20px) rotateX(20deg) rotateY(-5deg); } }
+      @keyframes gridMove { 0% { background-position: 0 0; } 100% { background-position: 0 60px; } }
+      @keyframes sheen { 0%,100% { left: -100%; } 50% { left: 130%; } }
+      @keyframes nfcPulse { 0% { opacity: 0.2; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.05); filter: drop-shadow(0 0 8px var(--dima-green)); } 100% { opacity: 0.2; transform: scale(0.9); } }
+      @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+      @keyframes shadowPulse { 0%,100% { opacity: 0.6; transform: scaleX(1); } 50% { opacity: 0.3; transform: scaleX(0.85); } }
+      @keyframes shimmer { 0% { transform: translateX(-150%) skewX(-12deg); } 100% { transform: translateX(300%) skewX(-12deg); } }
+
+      .card-3d-anim    { animation: float3D 8s ease-in-out infinite; transform-style: preserve-3d; }
+      .card-sheen-anim { animation: sheen 5s ease-in-out infinite; }
+      .shadow-p        { animation: shadowPulse 8s ease-in-out infinite; }
+      .fade-up         { animation: fadeInUp 0.8s cubic-bezier(0.16,1,0.3,1) both; opacity: 0; }
+      .nfc-wave-1      { animation: nfcPulse 1.5s infinite 0s; }
+      .nfc-wave-2      { animation: nfcPulse 1.5s infinite 0.2s; }
+      .nfc-wave-3      { animation: nfcPulse 1.5s infinite 0.4s; }
+
+      .brand-logo-text { font-family: var(--font-logo); color: var(--dima-green); text-shadow: -2px 3px 0px var(--dima-magenta); transform: skewX(-6deg); line-height: 1; letter-spacing: 2px; }
+      
+      .bg-grid-3d { position: absolute; width: 200%; height: 120%; bottom: -40%; left: -50%; background-image: linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px); background-size: 60px 60px; transform: perspective(600px) rotateX(75deg); animation: gridMove 3s linear infinite; mask-image: radial-gradient(ellipse at center, black 10%, transparent 60%); -webkit-mask-image: radial-gradient(ellipse at center, black 10%, transparent 60%); pointer-events: none; }
+      .card-texture-stripes { background: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.03) 10px, transparent 10px, transparent 20px); }
+
+      .tilt-card { transform-style: preserve-3d; background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 24px; box-shadow: var(--shadow-soft); transition: box-shadow 0.3s ease; }
+      .tilt-card:hover { box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
+      .tilt-content { transform: translateZ(40px); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+      .tilt-card:hover .tilt-content { transform: translateZ(70px); }
+
+      .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+      .animate-shimmer { animation: shimmer 2.5s infinite; }
+
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: var(--bg-light); }
+      ::-webkit-scrollbar-thumb { background: var(--dima-green); border-radius: 3px; }
+
+      .section-padding { padding: 120px 0; }
+      
+      @media (max-width: 900px) { .hide-mobile { display: none !important; } }
+      @media (max-width: 768px) {
+        .section-padding { padding: 80px 0 !important; }
+        .hero-grid { grid-template-columns: 1fr !important; text-align: center; gap: 40px !important; }
+        .hero-content { align-items: center !important; }
+        .hero-buttons { justify-content: center !important; flex-direction: column; width: 100%; }
+        .hero-buttons button, .hero-buttons a { width: 100%; justify-content: center; }
+        .how-it-works-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+        .contact-grid { grid-template-columns: 1fr !important; gap: 40px !important; text-align: center; }
+        .contact-info { justify-content: center; flex-direction: column; align-items: center; }
+        .footer-grid { grid-template-columns: 1fr !important; gap: 40px !important; text-align: center; }
+        .footer-socials { justify-content: center; }
+        .tilt-card { transform: none !important; }
+        .tilt-content { transform: none !important; }
+        .mobile-no-3d { transform: none !important; }
+      }
+      @media (min-width: 769px) {
+        .nav-links { display: flex; gap: 32px; }
+        .hero-grid { grid-template-columns: 1fr 1.1fr; }
+        .hero-content { align-items: flex-start; }
+        .how-it-works-grid { grid-template-columns: 1fr 1.2fr 1fr; }
+        .contact-grid { grid-template-columns: 1fr 1.2fr; }
+        .footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr; }
+        .contact-info { flex-direction: row; }
+      }
+    `;
+    document.head.appendChild(s);
+  }, []);
+  return null;
 }
 
-// ─── Navbar ────────────────────────────────────────────────────────────────
-function Navbar({ dark, toggleDark }) {
+// ─── COMPOSANTS GRAPHIQUES ET CARTES DYNAMIQUES ──────────────────────────────
+function Particles({ count = 15, color = "#00D66B" }) {
+  const particles = useRef(Array.from({ length: count }, (_, i) => ({ id: i, x: Math.random() * 100, y: Math.random() * 100, size: Math.random() * 4 + 2, delay: Math.random() * 4, dur: Math.random() * 4 + 4 })));
+  return (
+    <div className="hide-mobile" style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 0 }}>
+      {particles.current.map(p => (
+        <div key={p.id} style={{ position: "absolute", left: `${p.x}%`, top: `${p.y}%`, width: p.size, height: p.size, borderRadius: "50%", background: color, opacity: 0.15, filter: "blur(2px)", animation: `particleDrift ${p.dur}s ease-in-out ${p.delay}s infinite` }}/>
+      ))}
+    </div>
+  );
+}
+
+function DimacardPhysical({ product }) {
+  // S'il n'y a pas de produit sélectionné (ex: Hero section), on affiche la carte par défaut (Matte Black)
+  const bg = product ? product.bgGradient : 'linear-gradient(135deg, #1A1A1E 0%, #0A0A0C 100%)';
+  const textCol = product ? product.textColor : '#FFFFFF';
+  const themeCol = product ? product.themeColor : 'var(--dima-green)';
+
+  return (
+    <div style={{ position: "absolute", inset: 0, borderRadius: 24, background: bg, border: "1px solid rgba(255,255,255,0.1)", boxShadow: "20px 40px 60px rgba(0,0,0,0.4), inset 0 2px 10px rgba(255,255,255,0.05)", padding: "24px 8%", display: "flex", flexDirection: "column", justifyContent: "space-between", overflow: "hidden", transformStyle: "preserve-3d" }}>
+      <div className="card-texture-stripes" style={{ position: "absolute", inset: 0, opacity: 0.6, pointerEvents: "none", transform: "translateZ(-1px)" }} />
+      <div className="card-sheen-anim" style={{ position: "absolute", top: 0, left: "-100%", width: "50%", height: "100%", background: "linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.08) 50%,transparent 70%)", pointerEvents: "none", transform: "translateZ(1px)" }}/>
+      <div style={{ position: "absolute", bottom: "10%", right: "5%", width: "50%", aspectRatio: "1", borderRadius: "50%", background: "radial-gradient(circle, rgba(0,230,118,0.2) 0%, transparent 70%)", pointerEvents: "none", transform: "translateZ(-1px)" }}/>
+      
+      <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2%", marginTop: "4%", transform: "translateZ(30px)" }}>
+        <div style={{ fontFamily: "var(--font-logo)", color: textCol, transform: "skewX(-6deg)", fontSize: "clamp(32px, 10vw, 52px)", lineHeight: 1 }}>DIMA</div>
+        <div style={{ fontFamily: "var(--font-logo)", color: themeCol, transform: "skewX(-6deg)", fontSize: "clamp(24px, 7vw, 38px)", marginLeft: "10%", lineHeight: 1 }}>CARD</div>
+      </div>
+
+      <div style={{ position: "absolute", right: "8%", bottom: "20%", display: "flex", alignItems: "center", gap: 8, transform: "rotate(-45deg) translateZ(20px)" }}>
+        <div className="nfc-wave-1" style={{ width: 10, height: 10, borderRadius: "50%", background: themeCol, boxShadow: `0 0 10px ${themeCol}` }} />
+        <div className="nfc-wave-2" style={{ width: 20, height: 20, borderRadius: "50%", borderTop: `3px solid ${themeCol}`, borderRight: `3px solid ${themeCol}`, transform: "rotate(45deg)" }} />
+        <div className="nfc-wave-3" style={{ width: 34, height: 34, borderRadius: "50%", borderTop: `3px solid ${themeCol}`, borderRight: `3px solid ${themeCol}`, transform: "rotate(45deg) translate(-8px, 8px)" }} />
+      </div>
+
+      <div style={{ position: "relative", zIndex: 2, transform: "translateZ(15px)", marginBottom: "2%" }}>
+        <span style={{ fontFamily: "var(--font-body)", fontSize: "clamp(8px, 2.5vw, 10px)", color: textCol, letterSpacing: "1px", textTransform: "uppercase", opacity: 0.8 }}>SMART BUSINESS CARD</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── NAVBAR ──────────────────────────────────────────────────────────────────
+function Navbar({ currentPage, setCurrentPage }) {
   const [scrolled, setScrolled] = useState(false);
-  const [open, setOpen] = useState(false);
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", h);
     return () => window.removeEventListener("scroll", h);
   }, []);
-  const links = [
-    { label: "Fonctionnalités", href: "#features" },
-    { label: "Comment ça marche", href: "#how-it-works" },
-    { label: "Tarifs", href: "#pricing" },
-    { label: "Avis", href: "#testimonials" },
-    { label: "Contact", href: "#contact" },
-  ];
+
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? "py-3 bg-white/90 dark:bg-black/90 backdrop-blur-xl shadow-sm border-b border-black/5 dark:border-white/10" : "py-5 bg-transparent"}`}>
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-        <a href="#" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-md">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7v10l10 5 10-5V7L12 2z" fill="white"/></svg>
-          </div>
-          <span className="font-bold text-xl tracking-tight text-black dark:text-white">Dima<span className="text-amber-500">card</span></span>
-        </a>
-        <div className="hidden md:flex items-center gap-8">
-          {links.map(l => (
-            <a key={l.label} href={l.href} className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors">{l.label}</a>
-          ))}
-        </div>
-        <div className="hidden md:flex items-center gap-3">
-          <button onClick={toggleDark} className="p-2 rounded-full text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors">
-            {dark ? (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            )}
-          </button>
-          <a href="#pricing" className="px-4 py-2 text-sm font-semibold rounded-full bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors">Commander</a>
-        </div>
-        <button className="md:hidden p-2" onClick={() => setOpen(!open)}>
-          <div className={`w-5 h-0.5 bg-black dark:bg-white mb-1 transition-all ${open ? "rotate-45 translate-y-1.5" : ""}`}/>
-          <div className={`w-5 h-0.5 bg-black dark:bg-white mb-1 transition-all ${open ? "opacity-0" : ""}`}/>
-          <div className={`w-5 h-0.5 bg-black dark:bg-white transition-all ${open ? "-rotate-45 -translate-y-1.5" : ""}`}/>
+    <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, transition: "all 0.5s", padding: scrolled ? "12px 0" : "20px 0", background: scrolled ? "rgba(255,255,255,0.9)" : "transparent", backdropFilter: scrolled ? "blur(20px)" : "none", borderBottom: scrolled ? "1px solid var(--border-light)" : "none", boxShadow: scrolled ? "0 4px 20px rgba(0,0,0,0.02)" : "none" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <button onClick={() => setCurrentPage('home')} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", background: "none", border: "none", cursor: "pointer", transform: "translateZ(0)", transition: "transform 0.3s" }} onMouseEnter={e => e.currentTarget.style.transform="scale(1.05)"} onMouseLeave={e => e.currentTarget.style.transform="scale(1)"}>
+          <span className="brand-logo-text" style={{ fontSize: 24 }}>DIMA CARD</span>
         </button>
-      </div>
-      {open && (
-        <div className="md:hidden bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 px-6 py-4 flex flex-col gap-4">
-          {links.map(l => <a key={l.label} href={l.href} onClick={() => setOpen(false)} className="text-base font-medium text-gray-700 dark:text-gray-300">{l.label}</a>)}
-          <a href="#pricing" onClick={() => setOpen(false)} className="mt-2 px-5 py-2.5 text-sm font-semibold rounded-full bg-black dark:bg-white text-white dark:text-black text-center">Commander</a>
+        <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
+          <div className="nav-links hide-mobile">
+            <button onClick={() => setCurrentPage('home')} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 600, color: currentPage === 'home' ? "var(--dima-green)" : "var(--text-muted)", transition: "color 0.2s" }}>
+              Accueil
+            </button>
+            <button onClick={() => setCurrentPage('product_matte-black')} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 600, color: currentPage.startsWith('product') ? "var(--dima-green)" : "var(--text-muted)", transition: "color 0.2s" }}>
+              Boutique
+            </button>
+          </div>
+          <a href="#contact" style={{ padding: "10px 24px", borderRadius: 100, background: "var(--dima-green)", color: "#fff", fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, textDecoration: "none", boxShadow: "0 4px 15px rgba(0,230,118,0.3)" }}>Contact</a>
         </div>
-      )}
+      </div>
     </nav>
   );
 }
 
-// ─── Hero ──────────────────────────────────────────────────────────────────
-function Hero() {
+// ─── HERO ────────────────────────────────────────────────────────────────────
+function Hero({ setCurrentPage }) {
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  useEffect(() => {
+    const h = (e) => {
+      if(window.innerWidth > 768) {
+        setMousePos({ x: (e.clientX / window.innerWidth - 0.5) * 2, y: (e.clientY / window.innerHeight - 0.5) * 2 });
+      }
+    };
+    window.addEventListener("mousemove", h);
+    return () => window.removeEventListener("mousemove", h);
+  }, []);
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white dark:bg-black pt-20">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-amber-400/10 dark:bg-amber-500/10 blur-[120px]"/>
-        <div className="absolute top-1/2 right-0 w-[400px] h-[400px] rounded-full bg-blue-400/5 dark:bg-blue-400/5 blur-[100px]"/>
-        <svg className="absolute inset-0 w-full h-full opacity-[0.03] dark:opacity-[0.04]" xmlns="http://www.w3.org/2000/svg"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#noise)"/></svg>
+    <section className="section-padding" style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", perspective: "1000px" }}>
+      <Particles count={20} color="var(--dima-green)" />
+      <div className="bg-grid-3d" />
+      <div className="hide-mobile" style={{ position: "absolute", inset: 0, pointerEvents: "none", transformStyle: "preserve-3d" }}>
+        <div style={{ position: "absolute", top: "35%", left: "50%", width: 800, height: 400, borderRadius: "50%", background: "radial-gradient(ellipse,rgba(0,230,118,0.05) 0%,transparent 70%)", transform: `translate(calc(-50% + ${mousePos.x * 60}px), calc(-50% + ${mousePos.y * 60}px)) translateZ(-200px)`, transition: "transform 0.4s ease-out" }}/>
+        <div style={{ position: "absolute", top: "15%", right: "5%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(ellipse,rgba(213,0,249,0.03) 0%,transparent 70%)", transform: `translateY(${mousePos.y * -40}px) translateX(${mousePos.x * -40}px) translateZ(-100px)`, transition: "transform 0.4s ease-out" }}/>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center py-20">
-        <div className="text-center lg:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 mb-6 animate-fade-in">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"/>
-            <span className="text-xs font-medium text-amber-700 dark:text-amber-400">L'avenir est sans contact</span>
+      <div style={{ position: "relative", zIndex: 2, maxWidth: 1280, margin: "0 auto", padding: "0 24px", width: "100%" }}>
+        <div className="hero-grid" style={{ display: "grid", gap: 64, alignItems: "center" }}>
+          <div className="hero-content mobile-no-3d" style={{ display: "flex", flexDirection: "column", transform: `translateZ(30px) rotateY(${mousePos.x * 5}deg) rotateX(${mousePos.y * -5}deg)`, transition: "transform 0.3s ease-out", transformStyle: "preserve-3d" }}>
+            <div className="fade-up" style={{ animationDelay: "0.1s", display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 100, background: "rgba(0,230,118,0.1)", border: "1px solid rgba(0,230,118,0.2)", marginBottom: 24 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--dima-green)", boxShadow: "0 0 10px var(--dima-green)" }}/>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: 12, fontWeight: 700, color: "var(--dima-green-dark)", letterSpacing: "0.15em", textTransform: "uppercase" }}>Sans contact. Sans limite.</span>
+            </div>
+            <h1 className="hero-title fade-up" style={{ animationDelay: "0.2s", fontFamily: "var(--font-display)", fontSize: "clamp(42px,7vw,76px)", fontWeight: 900, color: "var(--text-main)", lineHeight: 1.05, letterSpacing: "-1px", marginBottom: 24 }}>
+              L'Avenir des<br />Cartes de<br /><span style={{ color: "var(--dima-green)" }}>Visite.</span>
+            </h1>
+            <p className="fade-up" style={{ animationDelay: "0.35s", fontFamily: "var(--font-body)", fontSize: "clamp(16px,3vw,18px)", color: "var(--text-muted)", maxWidth: 420, lineHeight: 1.6, marginBottom: 40 }}>
+              Partagez vos coordonnées en un seul geste. Une carte physique intelligente pour des connexions digitales illimitées.
+            </p>
+            <div className="hero-buttons fade-up" style={{ animationDelay: "0.5s", display: "flex", gap: 16, marginBottom: 44 }}>
+              <button onClick={() => setCurrentPage('product_matte-black')} style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "16px 32px", borderRadius: 16, background: "var(--dima-green)", color: "#fff", fontFamily: "var(--font-body)", fontWeight: 800, fontSize: 15, border: "none", cursor: "pointer", boxShadow: "0 10px 25px rgba(0,230,118,0.3)" }}>
+                Obtenir ma carte
+              </button>
+              <a href="#showcase" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "16px 32px", borderRadius: 16, background: "#fff", border: "1px solid var(--border-light)", color: "var(--text-main)", fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 15, textDecoration: "none", boxShadow: "0 5px 15px rgba(0,0,0,0.03)" }}>Comment ça marche</a>
+            </div>
           </div>
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight text-black dark:text-white mb-6">
-            L'Avenir<br/>des Cartes<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">de Visite.</span>
-          </h1>
-          <p className="text-lg sm:text-xl text-gray-500 dark:text-gray-400 max-w-md mx-auto lg:mx-0 mb-10 leading-relaxed">
-            Partagez vos coordonnées en un seul geste. Une carte. Des connexions infinies. Sans papier, sans friction, sans limite.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-            <a href="#pricing" className="group px-8 py-4 rounded-2xl bg-black dark:bg-white text-white dark:text-black font-semibold text-sm hover:scale-[1.02] transition-all duration-200 shadow-xl shadow-black/20 flex items-center justify-center gap-2">
-              Obtenir ma Dimacard
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:translate-x-1 transition-transform"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </a>
-            <a href="#how-it-works" className="px-8 py-4 rounded-2xl border border-gray-200 dark:border-white/15 text-black dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-all duration-200 flex items-center justify-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
-              Comment ça marche
-            </a>
-          </div>
-          <div className="mt-12 flex items-center gap-6 justify-center lg:justify-start">
-            <div className="flex -space-x-2">
-              {["#F59E0B","#3B82F6","#10B981","#8B5CF6","#EF4444"].map((c,i) => (
-                <div key={i} className="w-8 h-8 rounded-full border-2 border-white dark:border-black" style={{background:c}}/>
+
+          <div className="hero-card-container fade-up mobile-no-3d" style={{ animationDelay: "0.3s", display: "flex", flexDirection: "column", alignItems: "center", gap: 40, transformStyle: "preserve-3d", transform: `translateZ(50px) rotateY(${mousePos.x * -10}deg) rotateX(${mousePos.y * 10}deg)`, transition: "transform 0.2s ease-out" }}>
+            <div style={{ perspective: "1500px", position: "relative", width: "100%", maxWidth: 420, aspectRatio: "1.58" }}>
+              <div className="card-3d-anim" style={{ width: "100%", height: "100%", position: "relative" }}>
+                <DimacardPhysical />
+              </div>
+              <div className="shadow-p" style={{ position: "absolute", bottom: -30, left: "5%", width: "90%", height: 40, background: "radial-gradient(ellipse, rgba(0,0,0,0.15) 0%, transparent 60%)", filter: "blur(10px)" }}/>
+            </div>
+            <div style={{ display: "flex", gap: 0, background: "rgba(255,255,255,0.8)", backdropFilter: "blur(20px)", border: "1px solid var(--border-light)", borderRadius: 20, overflow: "hidden", transform: "translateZ(30px)", boxShadow: "0 15px 30px rgba(0,0,0,0.05)" }}>
+              {[{ num: "2.4K+", label: "Pros" },{ num: "1 Tap", label: "Connexion" },{ num: "100%", label: "Écolo" }].map((s, i) => (
+                <div key={i} style={{ padding: "16px 20px", textAlign: "center", borderRight: i < 2 ? "1px solid var(--border-light)" : "none" }}>
+                  <div style={{ fontFamily: "var(--font-display)", fontSize: "clamp(16px, 4vw, 20px)", fontWeight: 800, color: "var(--dima-green)" }}>{s.num}</div>
+                  <div style={{ fontFamily: "var(--font-body)", fontSize: 10, color: "var(--text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 4, fontWeight: "600" }}>{s.label}</div>
+                </div>
               ))}
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400"><strong className="text-black dark:text-white">2 400+</strong> professionnels font confiance à Dimacard</p>
           </div>
         </div>
-
-        <div className="relative flex justify-center lg:justify-end">
-          <div className="relative w-80 h-80 sm:w-96 sm:h-96">
-            <div className="absolute inset-0 animate-float">
-              <div className="w-full h-48 rounded-3xl bg-gradient-to-br from-gray-900 to-black shadow-2xl flex flex-col justify-between p-7 border border-white/10 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-amber-500/10 blur-2xl"/>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="w-10 h-7 rounded-md bg-gradient-to-br from-amber-300 to-amber-500 mb-3 opacity-90"/>
-                    <p className="text-white font-bold text-lg tracking-tight">Alexandre Martin</p>
-                    <p className="text-gray-400 text-xs">Designer Produit · Dimacard</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white" opacity="0.8"><path d="M11 1H4a2 2 0 00-2 2v18a2 2 0 002 2h7v-2H4V3h7V1zM13 1v2h7v18h-7v2h7a2 2 0 002-2V3a2 2 0 00-2-2h-7z"/></svg>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-1">
-                    {[...Array(3)].map((_,i) => <div key={i} className="w-1 h-1 rounded-full bg-amber-400"/>)}
-                  </div>
-                  <span className="text-gray-500 text-xs tracking-widest">NFC ACTIVÉ</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="absolute bottom-0 right-4 w-40 animate-float-delayed">
-              <div className="w-full bg-gray-900 rounded-[2rem] p-2 shadow-2xl border border-white/10">
-                <div className="bg-white dark:bg-gray-100 rounded-[1.5rem] overflow-hidden aspect-[9/16] flex flex-col">
-                  <div className="bg-black h-6 flex items-center justify-center">
-                    <div className="w-16 h-1.5 bg-gray-800 rounded-full"/>
-                  </div>
-                  <div className="flex-1 p-3 bg-gradient-to-b from-gray-50 to-white">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 mx-auto mb-2 shadow-md"/>
-                    <div className="text-center">
-                      <div className="h-2 w-20 bg-gray-800 rounded mx-auto mb-1"/>
-                      <div className="h-1.5 w-16 bg-gray-300 rounded mx-auto mb-3"/>
-                    </div>
-                    <div className="grid grid-cols-3 gap-1 mb-2">
-                      {[...Array(6)].map((_,i) => <div key={i} className="h-6 rounded-lg bg-gray-100"/>)}
-                    </div>
-                    <div className="h-6 rounded-lg bg-amber-400/20 border border-amber-300/50"/>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="absolute top-8 right-0 w-16 h-16 animate-ping-slow">
-              <div className="w-full h-full rounded-full border-2 border-amber-400/40 flex items-center justify-center">
-                <div className="w-10 h-10 rounded-full border-2 border-amber-400/60 flex items-center justify-center">
-                  <div className="w-4 h-4 rounded-full bg-amber-400/80"/>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-40">
-        <span className="text-xs tracking-widest uppercase text-gray-400">Défiler</span>
-        <div className="w-px h-10 bg-gradient-to-b from-gray-400 to-transparent animate-pulse"/>
       </div>
     </section>
   );
 }
 
-// ─── Features ─────────────────────────────────────────────────────────────
-const features = [
-  { icon: "📡", title: "Partage NFC en un geste", desc: "Un simple tap transfère votre profil complet — nom, liens, réseaux sociaux — vers n'importe quel smartphone en quelques secondes. Sans application." },
-  { icon: "📷", title: "Partage par QR code", desc: "Pas de NFC ? Aucun problème. Votre QR code unique permet à tout le monde de scanner et enregistrer vos infos instantanément." },
-  { icon: "📱", title: "Compatible tous les téléphones", desc: "Fonctionne avec iPhone, Android et tous les smartphones modernes. 100% multi-plateforme, sans configuration." },
-  { icon: "🌱", title: "Écologique", desc: "Une Dimacard remplace des milliers de cartes en papier. Meilleur pour votre réseau et pour la planète." },
-  { icon: "🎨", title: "Design personnalisé", desc: "Cartes entièrement personnalisées avec votre logo, vos couleurs et votre identité — finition mat ou brillant premium." },
-  { icon: "⚡", title: "Mises à jour en temps réel", desc: "Modifiez votre profil à tout moment. Vos contacts voient toujours vos dernières infos — sans jamais réimprimer." },
+// ─── FEATURES ────────────────────────────────────────────────────────────────
+const featuresInfo = [
+  { title: 'Technologie NFC', description: 'Un simple contact suffit pour partager votre profil. Pas de scan, pas de friction, juste une connexion instantanée.', icon: <Nfc className="w-8 h-8 text-[#00D66B]" />, color: 'from-[#00D66B]/20 to-[#00A354]/20' },
+  { title: 'Analyses en Temps Réel', description: 'Suivez qui consulte votre carte et quand. Transformez vos rencontres en opportunités mesurables.', icon: <BarChart className="w-8 h-8 text-[#D500F9]" />, color: 'from-[#D500F9]/20 to-[#A000BA]/20' },
+  { title: 'Personnalisation Totale', description: 'Choisissez parmi nos designs premium ou créez le vôtre. Votre carte doit être aussi unique que votre marque.', icon: <Palette className="w-8 h-8 text-[#69FFB4]" />, color: 'from-[#69FFB4]/20 to-[#00D66B]/20' },
 ];
 
 function Features() {
-  const [ref, inView] = useInView();
   return (
-    <section id="features" ref={ref} className="py-28 bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className={`text-center mb-16 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-          <span className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-4 block">Pourquoi Dimacard</span>
-          <h2 className="text-4xl sm:text-5xl font-black text-black dark:text-white leading-tight mb-4">Tout ce qu'il vous faut.<br/>Rien de superflu.</h2>
-          <p className="text-gray-500 dark:text-gray-400 text-lg max-w-xl mx-auto">Conçu pour les professionnels modernes qui avancent vite et laissent une impression durable.</p>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {features.map((f, i) => (
-            <div key={i} className={`group p-7 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/5 hover:border-amber-200 dark:hover:border-amber-500/20 hover:shadow-xl transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`} style={{ transitionDelay: `${i * 80}ms` }}>
-              <div className="text-3xl mb-4 group-hover:scale-110 transition-transform duration-300 inline-block">{f.icon}</div>
-              <h3 className="font-bold text-base text-black dark:text-white mb-2">{f.title}</h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{f.desc}</p>
-            </div>
+    <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 bg-[#0F172A] relative overflow-hidden">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#00D66B]/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="max-w-7xl mx-auto relative z-10">
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="text-center mb-20">
+          <h2 className="text-4xl sm:text-6xl font-black mb-6 tracking-tight text-white" style={{ fontFamily: 'var(--font-display)' }}>
+            L'Expérience <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00D66B] to-[#D500F9]">Premium</span>
+          </h2>
+          <p className="text-xl text-slate-300 max-w-2xl mx-auto">Tout ce dont vous avez besoin pour propulser votre réseau dans une nouvelle dimension.</p>
+        </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {featuresInfo.map((feature, index) => (
+            <motion.div key={index} initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: index * 0.2 }} whileHover={{ y: -10, scale: 1.02 }} className="relative group">
+              <div className="h-full glass p-10 rounded-2xl border border-white/10 group-hover:border-[#00D66B]/50 transition-all duration-500 relative overflow-hidden flex flex-col items-start">
+                <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                <div className="relative mb-8 p-4 rounded-xl bg-white/5 border border-white/10 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500 shadow-xl">
+                  {feature.icon}
+                  <div className="absolute inset-0 bg-white/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4 relative z-10" style={{ fontFamily: 'var(--font-display)' }}>{feature.title}</h3>
+                <p className="text-slate-300 leading-relaxed relative z-10 group-hover:text-white transition-colors">{feature.description}</p>
+                <div className="mt-8 flex items-center gap-2 text-xs font-mono text-[#00D66B] opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
+                  <Zap className="w-3 h-3 fill-current" />
+                  <span style={{ fontFamily: 'var(--font-body)' }}>DIMA-TECH READY</span>
+                </div>
+                <div className="absolute top-0 -inset-full h-full w-1/2 z-50 block transform -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:animate-shimmer pointer-events-none" />
+              </div>
+            </motion.div>
           ))}
         </div>
       </div>
     </section>
-  );
+  )
 }
 
-// ─── How It Works ─────────────────────────────────────────────────────────
-const steps = [
-  { n: "01", icon: "🪄", title: "Approchez votre Dimacard", desc: "Tenez votre Dimacard près d'un téléphone. La puce NFC s'active instantanément — sans déverrouiller, sans chercher." },
-  { n: "02", icon: "⚡", title: "Votre profil s'ouvre", desc: "Votre profil digital s'affiche dans le navigateur. Nom, poste, liens et coordonnées réunis en un seul endroit." },
-  { n: "03", icon: "🤝", title: "Partagez et connectez", desc: "Ils enregistrent votre contact, suivent vos réseaux ou visitent votre site — tout depuis un simple tap." },
+// ─── HOW IT WORKS ────────────────────────────────────────────────────────────
+const combinedSteps = [
+  { number: '01', title: 'Commandez votre carte', description: 'Choisissez votre design DimaCard. Vous recevrez une carte physique premium équipée de notre technologie NFC sécurisée.', icon: <Zap className="w-5 h-5 text-[#00D66B]" /> },
+  { number: '02', title: 'Configurez votre profil', description: 'Créez votre identité digitale sur notre plateforme. Ajoutez vos réseaux, votre portfolio et vos coordonnées en quelques clics.', icon: <Smartphone className="w-5 h-5 text-[#D500F9]" /> },
+  { number: '03', title: 'Scannez et Partagez', description: 'Approchez votre carte du smartphone de votre contact. Boom ! Votre profil s\'affiche, sans aucune application requise.', icon: <Share2 className="w-5 h-5 text-[#69FFB4]" /> },
 ];
 
-function HowItWorks() {
-  const [ref, inView] = useInView();
+function HowItWorksCombined() {
+  const [scanState, setScanState] = useState('waiting');
+  useEffect(() => {
+    const runAnimation = async () => {
+      setScanState('waiting');
+      await new Promise(r => setTimeout(r, 2000));
+      setScanState('scanning');
+      await new Promise(r => setTimeout(r, 800));
+      setScanState('success');
+    };
+    runAnimation();
+    const interval = setInterval(runAnimation, 6000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <section id="how-it-works" ref={ref} className="py-28 bg-white dark:bg-black overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className={`text-center mb-20 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-          <span className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-4 block">Simple comme 1-2-3</span>
-          <h2 className="text-4xl sm:text-5xl font-black text-black dark:text-white">Comment ça marche</h2>
-        </div>
-        <div className="relative grid md:grid-cols-3 gap-8">
-          <div className="hidden md:block absolute top-10 left-1/6 right-1/6 h-px bg-gradient-to-r from-transparent via-amber-300/60 to-transparent"/>
-          {steps.map((s, i) => (
-            <div key={i} className={`relative text-center transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"}`} style={{ transitionDelay: `${i * 150}ms` }}>
-              <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/10 border border-amber-200/60 dark:border-amber-700/30 mb-6 shadow-xl">
-                <span className="text-3xl">{s.icon}</span>
-                <span className="absolute -top-3 -right-3 w-7 h-7 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-black flex items-center justify-center">{s.n}</span>
-              </div>
-              <h3 className="font-bold text-xl text-black dark:text-white mb-3">{s.title}</h3>
-              <p className="text-gray-500 dark:text-gray-400 leading-relaxed text-sm max-w-xs mx-auto">{s.desc}</p>
+    <section id="showcase" className="py-24 px-4 sm:px-6 lg:px-8 bg-[#0F172A] relative overflow-hidden">
+      <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[500px] h-[500px] bg-[#D500F9]/15 blur-[120px] rounded-full pointer-events-none" />
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="space-y-12 relative z-10">
+            <div>
+              <h2 className="text-4xl sm:text-5xl font-black text-white mb-6 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+                Comment ça <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00D66B] to-[#D500F9]">marche ?</span>
+              </h2>
+              <p className="text-xl text-slate-300">Passez au networking nouvelle génération en trois étapes simples.</p>
             </div>
-          ))}
+            <div className="space-y-8">
+              {combinedSteps.map((step, index) => (
+                <motion.div key={index} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.2 }} viewport={{ once: true }} className="flex gap-6 group">
+                  <div className="flex flex-col items-center">
+                    <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-[#00D66B] group-hover:bg-[#00D66B]/10 transition-all duration-300 shrink-0 shadow-lg">
+                      {step.icon}
+                    </div>
+                    {index !== combinedSteps.length - 1 && <div className="w-px h-full bg-gradient-to-b from-[#00D66B]/50 to-transparent my-2" />}
+                  </div>
+                  <div className="pb-6">
+                    <div className="text-sm font-mono text-[#00D66B] mb-1">Étape {step.number}</div>
+                    <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>{step.title}</h3>
+                    <p className="text-slate-400 leading-relaxed">{step.description}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          <div className="relative flex justify-center items-center h-[600px] w-full">
+            <motion.div animate={{ y: scanState === 'scanning' ? 80 : -50, scale: scanState === 'scanning' ? 0.9 : 1, rotateX: scanState === 'success' ? 45 : 15, opacity: scanState === 'success' ? 0 : 1 }} transition={{ duration: 0.6, ease: "easeInOut" }} style={{ perspective: "1000px" }} className="absolute top-0 z-30 flex justify-center w-full">
+              <div className="w-40 h-28 rounded-xl bg-gradient-to-br from-[#1A1A1E] to-[#0A0A0C] border border-white/20 shadow-2xl flex items-center justify-center relative overflow-hidden transform rotate-12">
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#00D66B]/20 to-transparent" />
+                <CreditCard className="text-white/50 w-6 h-6 absolute top-2 left-2" />
+                <span className="text-white font-bold text-lg tracking-widest z-10" style={{ fontFamily: 'var(--font-logo)', textShadow: '-1.5px 2px 0px var(--dima-magenta)' }}>DIMA</span>
+                <Nfc className="text-[#00D66B] w-5 h-5 absolute bottom-2 right-2" />
+              </div>
+            </motion.div>
+            <AnimatePresence>
+              {scanState === 'scanning' && <motion.div initial={{ scale: 0.5, opacity: 1 }} animate={{ scale: 2, opacity: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.8, ease: "easeOut" }} className="absolute top-24 w-32 h-32 border-4 border-[#00D66B] rounded-full z-20" />}
+            </AnimatePresence>
+            <div className="relative z-10 w-[280px] h-[560px] bg-gray-900 rounded-[2.5rem] border-[6px] border-gray-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-24 h-6 bg-black rounded-full z-50" />
+              <div className="relative w-full h-full bg-[#0a0a0a]">
+                <AnimatePresence mode="wait">
+                  {(scanState === 'waiting' || scanState === 'scanning') && (
+                    <motion.div key="waiting" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.3 }} className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                      <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="w-20 h-20 bg-[#00D66B]/10 rounded-full flex items-center justify-center mb-6"><Nfc className="w-10 h-10 text-[#00D66B]" /></motion.div>
+                      <h3 className="text-white font-semibold text-lg mb-2" style={{ fontFamily: 'var(--font-display)' }}>Prêt à scanner</h3>
+                      <p className="text-gray-500 text-xs">Approchez la carte</p>
+                    </motion.div>
+                  )}
+                  {scanState === 'success' && (
+                    <motion.div key="success" initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="absolute inset-0 bg-[#111] overflow-y-auto pb-6 scrollbar-hide">
+                      <div className="h-32 bg-gradient-to-br from-[#00A354] to-[#0F172A]" />
+                      <div className="px-5 -mt-10 relative z-10 flex flex-col items-center">
+                        <div className="w-20 h-20 rounded-full border-4 border-[#111] bg-gray-800 flex items-center justify-center shadow-lg"><span className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>JD</span></div>
+                        <div className="mt-3 text-center">
+                          <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>Jean Dupont</h2>
+                          <p className="text-[#00D66B] font-medium text-xs mt-1">Directeur Innovation</p>
+                          <p className="text-gray-400 text-[10px] mt-1 flex items-center justify-center gap-1"><MapPin className="w-3 h-3" /> Tanger, Maroc</p>
+                        </div>
+                        <button className="w-full mt-4 bg-white text-black font-bold py-2 rounded-xl flex items-center justify-center gap-2 text-sm hover:bg-gray-200" style={{ fontFamily: 'var(--font-body)' }}><UserPlus className="w-4 h-4" /> Sauvegarder</button>
+                        <div className="w-full mt-6 grid grid-cols-2 gap-2">
+                          <div className="flex flex-col items-center p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"><Phone className="w-5 h-5 text-[#00D66B] mb-1" /><span className="text-[10px] text-gray-300">Appeler</span></div>
+                          <div className="flex flex-col items-center p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"><Mail className="w-5 h-5 text-[#D500F9] mb-1" /><span className="text-[10px] text-gray-300">Email</span></div>
+                          <div className="flex flex-col items-center p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"><Linkedin className="w-5 h-5 text-[#69FFB4] mb-1" /><span className="text-[10px] text-gray-300">LinkedIn</span></div>
+                          <div className="flex flex-col items-center p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"><Globe className="w-5 h-5 text-[#00D66B] mb-1" /><span className="text-[10px] text-gray-300">Site</span></div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
-// ─── Product Showcase ──────────────────────────────────────────────────────
-function Showcase() {
-  const [ref, inView] = useInView();
-  return (
-    <section className="py-28 bg-black overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className={`text-center mb-16 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`} ref={ref}>
-          <span className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-4 block">Le Produit</span>
-          <h2 className="text-4xl sm:text-5xl font-black text-white mb-4">Conçu pour impressionner</h2>
-          <p className="text-gray-500 text-lg max-w-xl mx-auto">Matériaux premium. Intelligence digitale. Élégance physique.</p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className={`group p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-amber-500/30 transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`} style={{ transitionDelay: "0ms" }}>
-            <div className="w-full aspect-video rounded-2xl bg-gradient-to-br from-gray-800 to-black border border-white/10 mb-6 flex items-center justify-center relative overflow-hidden shadow-2xl">
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent"/>
-              <div className="text-center">
-                <div className="w-16 h-11 rounded-lg bg-gradient-to-br from-amber-300 to-amber-600 mx-auto mb-3 shadow-xl opacity-90"/>
-                <p className="text-white font-bold text-sm">Alexandre Martin</p>
-                <p className="text-gray-500 text-xs">alexandre@entreprise.fr</p>
-              </div>
-            </div>
-            <h3 className="text-white font-bold text-lg mb-2">Carte de visite NFC</h3>
-            <p className="text-gray-500 text-sm leading-relaxed">Finition noire mate premium avec puce NFC intégrée et accents dorés en feuille d'or.</p>
-          </div>
-          <div className={`group p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-amber-500/30 transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`} style={{ transitionDelay: "120ms" }}>
-            <div className="w-full aspect-video rounded-2xl bg-gradient-to-b from-gray-100 to-white mb-6 flex items-center justify-center overflow-hidden shadow-2xl">
-              <div className="w-full h-full p-4 flex flex-col items-center justify-center gap-2">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg"/>
-                <div className="text-center">
-                  <p className="text-gray-900 font-bold text-sm">Alexandre Martin</p>
-                  <p className="text-gray-400 text-xs">Designer Produit</p>
-                </div>
-                <div className="flex gap-2">
-                  {["🔗","in","𝕏"].map((ic, i) => (
-                    <div key={i} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-xs">{ic}</div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <h3 className="text-white font-bold text-lg mb-2">Profil digital</h3>
-            <p className="text-gray-500 text-sm leading-relaxed">Magnifique page de profil optimisée mobile avec tous vos liens au même endroit.</p>
-          </div>
-          <div className={`group p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-amber-500/30 transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`} style={{ transitionDelay: "240ms" }}>
-            <div className="w-full aspect-video rounded-2xl bg-white mb-6 flex items-center justify-center shadow-2xl">
-              <div className="grid grid-cols-7 gap-0.5 p-4">
-                {[...Array(49)].map((_, i) => (
-                  <div key={i} className="w-3 h-3 rounded-sm"
-                    style={{ background: ([0,1,2,3,4,5,6,7,13,14,20,21,27,28,42,43,44,45,46,47,48].includes(i) ? "#000" : Math.random() > 0.5 ? "#000" : "#fff") }}
-                  />
-                ))}
-              </div>
-            </div>
-            <h3 className="text-white font-bold text-lg mb-2">Partage par QR code</h3>
-            <p className="text-gray-500 text-sm leading-relaxed">Scannez partout — fonctionne hors ligne, dans les supports imprimés ou dans votre signature email.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── For Who ───────────────────────────────────────────────────────────────
-const audiences = [
-  { emoji: "🚀", role: "Entrepreneurs", desc: "Faites une première impression marquante à chaque pitch et événement de networking." },
-  { emoji: "💼", role: "Équipes commerciales", desc: "Concluez des deals plus vite. Partagez vos infos et suivez chaque connexion." },
-  { emoji: "🏢", role: "Entreprises", desc: "Unifiez l'image de toute votre équipe avec une identité digitale cohérente." },
-  { emoji: "🎨", role: "Freelances", desc: "Présentez votre portfolio et décrochez des missions en un simple tap." },
-];
-
-function ForWho() {
-  const [ref, inView] = useInView();
-  return (
-    <section className="py-28 bg-gray-50 dark:bg-gray-950" ref={ref}>
-      <div className="max-w-7xl mx-auto px-6">
-        <div className={`text-center mb-16 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-          <span className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-4 block">Pour tout le monde</span>
-          <h2 className="text-4xl sm:text-5xl font-black text-black dark:text-white">Qui utilise Dimacard ?</h2>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {audiences.map((a, i) => (
-            <div key={i} className={`group text-center p-8 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/5 hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`} style={{ transitionDelay: `${i * 100}ms` }}>
-              <div className="text-4xl mb-5 group-hover:scale-125 transition-transform duration-300 inline-block">{a.emoji}</div>
-              <h3 className="font-bold text-black dark:text-white mb-2">{a.role}</h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{a.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── Pricing ───────────────────────────────────────────────────────────────
+// ─── PRICING ─────────────────────────────────────────────────────────────────
 const plans = [
-  {
-    name: "Starter", price: "29", period: "paiement unique", popular: false,
-    features: ["1 carte NFC", "Page de profil digital", "Partage QR code", "Statistiques de base", "Support par email"],
-    cta: "Commencer",
-  },
-  {
-    name: "Pro", price: "59", period: "paiement unique", popular: true,
-    features: ["1 carte NFC premium", "Design de profil personnalisé", "Lien avec domaine personnalisé", "Statistiques avancées", "Support prioritaire", "Mises à jour illimitées"],
-    cta: "Passer Pro",
-  },
-  {
-    name: "Business", price: "199", period: "par équipe / an", popular: false,
-    features: ["10 cartes NFC", "Tableau de bord équipe", "Personnalisation de marque", "Intégrations CRM", "Analytiques équipe", "Responsable dédié"],
-    cta: "Contacter les ventes",
-  },
+  { name: 'Starter', price: '249 DH', description: 'Le choix responsable', features: ['1 Carte Eco Bamboo', 'Profil Digital de base', 'Support Email'], highlight: false, productId: 'eco-bamboo' },
+  { name: 'Professional', price: '299 DH', description: 'Le choix des experts', features: ['1 Carte Matte Black', 'Analyses avancées', 'Support Prioritaire', 'Design sur mesure'], highlight: true, productId: 'matte-black' },
+  { name: 'Premium', price: '499 DH', description: 'Pour les dirigeants', features: ['1 Carte Premium Metal', 'Dashboard d\'équipe', 'Manager dédié', 'Accès API'], highlight: false, productId: 'premium-metal' },
 ];
 
-function Pricing() {
-  const [ref, inView] = useInView();
+function Pricing({ setCurrentPage }) {
   return (
-    <section id="pricing" ref={ref} className="py-28 bg-white dark:bg-black">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className={`text-center mb-16 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-          <span className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-4 block">Tarifs simples</span>
-          <h2 className="text-4xl sm:text-5xl font-black text-black dark:text-white mb-4">Investissez une fois.<br/>Connectez pour toujours.</h2>
-          <p className="text-gray-500 dark:text-gray-400 text-lg">Pas d'abonnement. Pas de réimpression. Juste des résultats.</p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-6 items-start max-w-5xl mx-auto">
-          {plans.map((p, i) => (
-            <div key={i} className={`relative rounded-3xl p-8 border transition-all duration-700 ${p.popular ? "bg-black dark:bg-white border-black dark:border-white shadow-2xl scale-[1.03]" : "bg-white dark:bg-gray-900 border-gray-100 dark:border-white/5 hover:shadow-xl"} ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`} style={{ transitionDelay: `${i * 100}ms` }}>
-              {p.popular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-amber-500 text-white text-xs font-bold">Le plus populaire</div>}
-              <h3 className={`font-bold text-lg mb-1 ${p.popular ? "text-white dark:text-black" : "text-black dark:text-white"}`}>{p.name}</h3>
-              <div className="mb-6">
-                <span className={`text-5xl font-black ${p.popular ? "text-white dark:text-black" : "text-black dark:text-white"}`}>{p.price}€</span>
-                <span className={`text-sm ml-2 ${p.popular ? "text-gray-300 dark:text-gray-600" : "text-gray-400"}`}>{p.period}</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                {p.features.map((f, j) => (
-                  <li key={j} className={`flex items-center gap-3 text-sm ${p.popular ? "text-gray-300 dark:text-gray-700" : "text-gray-600 dark:text-gray-400"}`}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={p.popular ? "#F59E0B" : "#10B981"} strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <button className={`w-full py-3.5 rounded-2xl font-semibold text-sm transition-all duration-200 ${p.popular ? "bg-amber-500 text-white hover:bg-amber-400" : "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200"}`}>
-                {p.cta}
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── Testimonials ──────────────────────────────────────────────────────────
-const testimonials = [
-  { name: "Sophie Mercier", role: "Designer UX @ Figma", avatar: "SM", text: "J'ai distribué plus de 500 cartes papier dans ma carrière. Depuis que je suis passée à Dimacard, j'ai beaucoup plus de suites — les gens se souviennent vraiment de moi." },
-  { name: "Marc Lebrun", role: "Fondateur @ Buildify", avatar: "ML", text: "J'ai conclu trois contrats lors d'une conférence le mois dernier rien qu'en tapant ma carte. Le facteur wow à lui seul vaut chaque centime." },
-  { name: "Priya Nair", role: "Directrice des ventes @ Stripe", avatar: "PN", text: "Nous avons déployé Dimacard pour toute notre équipe. L'intégration a été instantanée et nos leads ont augmenté de 40 %. C'est une évidence." },
-  { name: "Thomas Krause", role: "Développeur Freelance", avatar: "TK", text: "Minimaliste, élégant, efficace. Mon lien portfolio s'ouvre immédiatement quand quelqu'un tape la carte. Pas d'appli nécessaire. De la pure magie." },
-];
-
-function Testimonials() {
-  const [ref, inView] = useInView();
-  const colors = ["#F59E0B","#3B82F6","#10B981","#8B5CF6"];
-  return (
-    <section id="testimonials" ref={ref} className="py-28 bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className={`text-center mb-16 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-          <span className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-4 block">Ils nous font confiance</span>
-          <h2 className="text-4xl sm:text-5xl font-black text-black dark:text-white">Ils adorent Dimacard</h2>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {testimonials.map((t, i) => (
-            <div key={i} className={`p-7 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/5 transition-all duration-700 hover:shadow-xl ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`} style={{ transitionDelay: `${i * 100}ms` }}>
-              <div className="flex mb-4">
-                {[...Array(5)].map((_,s) => <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
-              </div>
-              <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-6">« {t.text} »</p>
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: colors[i] }}>{t.avatar}</div>
-                <div>
-                  <p className="font-semibold text-sm text-black dark:text-white">{t.name}</p>
-                  <p className="text-gray-400 text-xs">{t.role}</p>
+    <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 bg-[#FAFAFA] relative overflow-hidden">
+      <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-[#00D66B]/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="max-w-6xl mx-auto relative z-10">
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="text-center mb-16 space-y-4">
+          <h2 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
+            Passez au <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00D66B] to-[#D500F9]">Networking 2.0</span>
+          </h2>
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto" style={{ fontFamily: 'var(--font-body)' }}>Choisissez l'offre DimaCard qui correspond à vos ambitions.</p>
+        </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+          {plans.map((plan, index) => (
+            <motion.div key={index} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} whileHover={{ y: -10 }} transition={{ duration: 0.5, delay: index * 0.1 }} viewport={{ once: true }} className={`relative p-8 rounded-3xl transition-all duration-500 flex flex-col h-full ${plan.highlight ? 'bg-white border-2 border-[#00D66B] shadow-[0_20px_50px_rgba(0,214,107,0.15)] scale-105 z-20' : 'bg-white border border-slate-200 hover:border-[#00D66B]/30 shadow-sm z-10'}`}>
+              {plan.highlight && <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#00D66B] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1"><Sparkles className="w-3 h-3" /> Recommandé</div>}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold text-slate-900 mb-2" style={{ fontFamily: 'var(--font-display)' }}>{plan.name}</h3>
+                <p className="text-sm text-slate-500 mb-6" style={{ fontFamily: 'var(--font-body)' }}>{plan.description}</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-black text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>{plan.price}</span>
+                  {plan.price !== 'Sur devis' && <span className="text-slate-500 text-sm" style={{ fontFamily: 'var(--font-body)' }}>/une fois</span>}
                 </div>
               </div>
-            </div>
+              <ul className="space-y-4 mb-10 flex-grow">
+                {plan.features.map((feature, i) => <li key={i} className="flex items-start gap-3 text-sm text-slate-600" style={{ fontFamily: 'var(--font-body)' }}><Check className={`w-5 h-5 shrink-0 ${plan.highlight ? 'text-[#00D66B]' : 'text-slate-400'}`} /><span>{feature}</span></li>)}
+              </ul>
+              <button onClick={() => setCurrentPage(`product_${plan.productId}`)} className={`w-full py-4 rounded-xl font-bold transition-all duration-300 cursor-pointer border-none ${plan.highlight ? 'bg-[#00D66B] text-white hover:bg-[#00A354] shadow-lg shadow-[#00D66B]/20' : 'bg-slate-100 text-slate-900 hover:bg-slate-200'}`} style={{ fontFamily: 'var(--font-body)' }}>
+                Configurer ce modèle
+              </button>
+            </motion.div>
           ))}
         </div>
       </div>
     </section>
-  );
+  )
 }
 
-// ─── Contact Form ──────────────────────────────────────────────────────────
+// ─── CONTACT ─────────────────────────────────────────────────────────────────
 function Contact() {
-  const [ref, inView] = useInView();
-  const [form, setForm] = useState({ nom: "", email: "", sujet: "", message: "" });
-  const [status, setStatus] = useState("idle");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
 
-  const handleChange = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxa15n3I42jHSZGnjmBnXvmqSEhvzDml4GkgfqsP-fZsGvVkOkmC1n7pQvv7BPFlPh/exec';
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.nom || !form.email || !form.message) return;
-    setStatus("sending");
-    setTimeout(() => setStatus("success"), 1500);
+    setIsSubmitting(true);
+    const dataToSend = new FormData();
+    dataToSend.append('name', formData.name);
+    dataToSend.append('email', formData.email);
+    dataToSend.append('subject', formData.subject);
+    dataToSend.append('message', formData.message);
+
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: dataToSend });
+      setIsSuccess(true);
+      setFormData({ name: '', email: '', subject: '', message: '' });
+      setTimeout(() => setIsSuccess(false), 5000);
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert("Erreur de connexion.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const inputClass = "w-full px-4 py-3.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 dark:focus:border-amber-500 transition-all duration-200";
+  const handleChange = (e) => setFormData({ ...formData, [e.target.id]: e.target.value });
 
   return (
-    <section id="contact" ref={ref} className="py-28 bg-white dark:bg-black">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-16 items-start">
+    <section id="contact" className="py-24 px-4 sm:px-6 lg:px-8 bg-white relative overflow-hidden">
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#00D66B]/10 blur-[100px] rounded-full pointer-events-none" />
+      <div className="max-w-7xl mx-auto relative z-10">
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="text-center mb-16">
+          <h2 className="text-4xl sm:text-5xl font-black text-slate-900 mb-4 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+            Prêt à faire le <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00D66B] to-[#D500F9]">premier pas ?</span>
+          </h2>
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto" style={{ fontFamily: 'var(--font-body)' }}>Contactez l'équipe DimaCard pour une démo ou une commande personnalisée.</p>
+        </motion.div>
 
-          {/* Left – Info */}
-          <div className={`transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            <span className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-4 block">Nous contacter</span>
-            <h2 className="text-4xl sm:text-5xl font-black text-black dark:text-white mb-6 leading-tight">
-              Une question ?<br/>On vous répond.
-            </h2>
-            <p className="text-gray-500 dark:text-gray-400 text-lg leading-relaxed mb-10">
-              Notre équipe est disponible du lundi au vendredi. Nous répondons généralement sous 24h.
-            </p>
-
-            <div className="space-y-5">
-              {[
-                {
-                  icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
-                  label: "Email", value: "bonjour@dimacard.io",
-                },
-                {
-                  icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.96a16 16 0 006.06 6.06l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>,
-                  label: "Téléphone", value: "+33 1 23 45 67 89",
-                },
-                {
-                  icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
-                  label: "Adresse", value: "12 rue de l'Innovation, 75008 Paris",
-                },
-              ].map((item, i) => (
-                <div key={i} className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-11 h-11 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
-                    {item.icon}
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">{item.label}</p>
-                    <p className="text-sm font-medium text-black dark:text-white">{item.value}</p>
-                  </div>
-                </div>
-              ))}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-xl relative z-20">
+          <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.2 }} viewport={{ once: true }} className="lg:col-span-2 space-y-8">
+            <div>
+              <h3 className="text-2xl font-bold text-slate-900 mb-2" style={{ fontFamily: 'var(--font-display)' }}>Nos Coordonnées</h3>
+              <p className="text-slate-500 text-sm" style={{ fontFamily: 'var(--font-body)' }}>Nous répondons généralement en moins de 24h.</p>
             </div>
+            <div className="space-y-6">
+              <div className="flex items-start gap-4"><div className="w-12 h-12 rounded-xl bg-[#00D66B]/10 border border-[#00D66B]/20 flex items-center justify-center shrink-0"><Mail className="w-5 h-5 text-[#00D66B]" /></div><div><h4 className="text-slate-900 font-bold mb-1">Email</h4><a href="mailto:contact@dimacard.ma" className="text-slate-600 hover:text-[#00D66B] transition-colors text-sm font-medium">contact@dimacard.ma</a></div></div>
+              <div className="flex items-start gap-4"><div className="w-12 h-12 rounded-xl bg-[#00D66B]/10 border border-[#00D66B]/20 flex items-center justify-center shrink-0"><Phone className="w-5 h-5 text-[#00D66B]" /></div><div><h4 className="text-slate-900 font-bold mb-1">Téléphone</h4><a href="tel:+212600000000" className="text-slate-600 hover:text-[#00D66B] transition-colors text-sm font-medium">+212 6 00 00 00 00</a></div></div>
+              <div className="flex items-start gap-4"><div className="w-12 h-12 rounded-xl bg-[#00D66B]/10 border border-[#00D66B]/20 flex items-center justify-center shrink-0"><MapPin className="w-5 h-5 text-[#00D66B]" /></div><div><h4 className="text-slate-900 font-bold mb-1">Laboratoire & Bureau</h4><p className="text-slate-600 text-sm font-medium">Zone Technologique<br />Tanger, Maroc</p></div></div>
+            </div>
+          </motion.div>
 
-            <div className="mt-10 pt-10 border-t border-gray-100 dark:border-white/10">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Suivez-nous</p>
-              <div className="flex gap-3">
-                {["𝕏","in","ig"].map((s, i) => (
-                  <a key={i} href="#" className="w-10 h-10 rounded-full border border-gray-200 dark:border-white/10 hover:border-amber-400 dark:hover:border-amber-500 flex items-center justify-center text-sm text-gray-500 dark:text-gray-400 hover:text-amber-500 dark:hover:text-amber-400 transition-all duration-200">{s}</a>
-                ))}
+          <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.4 }} viewport={{ once: true }} className="lg:col-span-3">
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2"><label htmlFor="name" className="text-sm font-bold text-slate-700">Nom complet</label><input type="text" id="name" required value={formData.name} onChange={handleChange} className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-[#00D66B] focus:ring-1 focus:ring-[#00D66B]" /></div>
+                <div className="space-y-2"><label htmlFor="email" className="text-sm font-bold text-slate-700">Adresse Email</label><input type="email" id="email" required value={formData.email} onChange={handleChange} className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-[#00D66B] focus:ring-1 focus:ring-[#00D66B]" /></div>
               </div>
-            </div>
-          </div>
-
-          {/* Right – Form */}
-          <div className={`transition-all duration-700 delay-150 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            <div className="bg-gray-50 dark:bg-gray-950 rounded-3xl p-8 border border-gray-100 dark:border-white/5">
-              {status === "success" ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center gap-5">
-                  <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-                  </div>
-                  <h3 className="text-xl font-black text-black dark:text-white">Message envoyé !</h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs">Merci pour votre message. Notre équipe vous répondra dans les 24h.</p>
-                  <button onClick={() => { setStatus("idle"); setForm({ nom: "", email: "", sujet: "", message: "" }); }}
-                    className="mt-2 px-6 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black text-sm font-semibold hover:bg-gray-800 transition-colors">
-                    Envoyer un autre message
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <h3 className="text-xl font-black text-black dark:text-white mb-6">Envoyez-nous un message</h3>
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Nom complet *</label>
-                      <input name="nom" value={form.nom} onChange={handleChange} placeholder="Alexandre Martin" className={inputClass} required />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Email *</label>
-                      <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="alex@exemple.fr" className={inputClass} required />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Sujet</label>
-                    <select name="sujet" value={form.sujet} onChange={handleChange} className={inputClass}>
-                      <option value="">Choisissez un sujet</option>
-                      <option value="commande">Commander une Dimacard</option>
-                      <option value="entreprise">Solution entreprise</option>
-                      <option value="support">Support technique</option>
-                      <option value="partenariat">Partenariat</option>
-                      <option value="autre">Autre</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Message *</label>
-                    <textarea name="message" value={form.message} onChange={handleChange} rows={5} placeholder="Décrivez votre besoin ou posez votre question..." className={`${inputClass} resize-none`} required />
-                  </div>
-
-                  <button type="submit" disabled={status === "sending"}
-                    className="w-full py-4 rounded-2xl bg-black dark:bg-white text-white dark:text-black font-bold text-sm hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 shadow-xl shadow-black/10">
-                    {status === "sending" ? (
-                      <>
-                        <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                        Envoi en cours...
-                      </>
-                    ) : (
-                      <>
-                        Envoyer le message
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
-                      </>
-                    )}
-                  </button>
-
-                  <p className="text-xs text-gray-400 text-center">En soumettant ce formulaire, vous acceptez notre <a href="#" className="underline hover:text-amber-500 transition-colors">politique de confidentialité</a>.</p>
-                </form>
-              )}
-            </div>
-          </div>
+              <div className="space-y-2"><label htmlFor="subject" className="text-sm font-bold text-slate-700">Sujet</label><input type="text" id="subject" required value={formData.subject} onChange={handleChange} className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-[#00D66B] focus:ring-1 focus:ring-[#00D66B]" /></div>
+              <div className="space-y-2"><label htmlFor="message" className="text-sm font-bold text-slate-700">Message</label><textarea id="message" required rows="4" value={formData.message} onChange={handleChange} className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-[#00D66B] focus:ring-1 focus:ring-[#00D66B] resize-none"></textarea></div>
+              <button type="submit" disabled={isSubmitting || isSuccess} className={`w-full sm:w-auto px-8 py-4 font-bold rounded-xl flex items-center justify-center gap-2 border-none cursor-pointer text-white shadow-lg ${isSuccess ? 'bg-[#00A354] shadow-[#00A354]/20' : 'bg-[#00D66B] hover:bg-[#00A354] shadow-[#00D66B]/30 hover:shadow-[#00D66B]/50'} disabled:opacity-70 disabled:cursor-not-allowed`} style={{ fontFamily: 'var(--font-body)' }}>
+                {isSubmitting ? <><Loader className="w-5 h-5 animate-spin" /> Envoi en cours...</> : isSuccess ? <><CheckCircle className="w-5 h-5" /> Message envoyé !</> : <>Envoyer le message <Send className="w-4 h-4" /></>}
+              </button>
+            </form>
+          </motion.div>
         </div>
       </div>
     </section>
   );
 }
 
-// ─── CTA ───────────────────────────────────────────────────────────────────
-function CTA() {
-  const [ref, inView] = useInView();
-  return (
-    <section className="py-28 bg-black relative overflow-hidden" ref={ref}>
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-[120px]"/>
-        <div className="absolute top-0 left-0 w-64 h-64 rounded-full bg-amber-600/5 blur-[80px]"/>
-      </div>
-      <div className={`relative z-10 max-w-3xl mx-auto px-6 text-center transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-        <span className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-4 block">Prêt à passer au niveau supérieur ?</span>
-        <h2 className="text-5xl sm:text-6xl font-black text-white mb-6 leading-tight">Révolutionnez votre<br/>networking avec <span className="text-amber-400">Dimacard</span>.</h2>
-        <p className="text-gray-400 text-xl mb-10">Rejoignez 2 400+ professionnels qui créent des connexions plus intelligentes.</p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="#pricing" className="group px-8 py-4 rounded-2xl bg-amber-500 text-white font-bold text-sm hover:bg-amber-400 transition-all duration-200 shadow-xl shadow-amber-500/20 flex items-center justify-center gap-2">
-            Obtenir ma Dimacard
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:translate-x-1 transition-transform"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </a>
-          <a href="#contact" className="px-8 py-4 rounded-2xl border border-white/15 text-white font-semibold text-sm hover:bg-white/5 transition-all duration-200 flex items-center justify-center gap-2">
-            Nous contacter
-          </a>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── Footer ────────────────────────────────────────────────────────────────
+// ─── FOOTER ──────────────────────────────────────────────────────────────────
 function Footer() {
   return (
-    <footer className="bg-black border-t border-white/10 py-16">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid md:grid-cols-4 gap-12 mb-12">
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7v10l10 5 10-5V7L12 2z" fill="white"/></svg>
-              </div>
-              <span className="font-bold text-white">Dima<span className="text-amber-500">card</span></span>
-            </div>
-            <p className="text-gray-500 text-sm leading-relaxed mb-5">La carte de visite NFC la plus intelligente pour les professionnels modernes.</p>
-            <div className="flex gap-3">
-              {["𝕏","in","ig","fb"].map((s, i) => (
-                <a key={i} href="#" className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-xs text-gray-400 hover:text-white transition-colors">{s}</a>
-              ))}
+    <footer style={{ background: "var(--bg-white)", borderTop: "1px solid var(--border-light)", padding: "60px 0 40px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
+        <div className="footer-grid" style={{ display: "grid", marginBottom: 64 }}>
+          <div className="flex flex-col items-center md:items-start">
+            <div style={{ marginBottom: 20 }}><span className="brand-logo-text" style={{ fontSize: 28, textShadow: "-1.5px 2px 0px var(--dima-magenta)" }}>DIMA CARD</span></div>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "var(--text-muted)", lineHeight: 1.7, marginBottom: 24, maxWidth: 300 }}>La carte de visite NFC la plus intelligente.</p>
+            <div className="footer-socials" style={{ display: "flex", gap: 12 }}>
+              {["𝕏","in","ig"].map((s, i) => <a key={i} href="#" style={{ width: 36, height: 36, borderRadius: "50%", background: "#F1F5F9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "var(--text-muted)", textDecoration: "none", fontWeight: "600" }}>{s}</a>)}
             </div>
           </div>
-          {[
-            { title: "Produit", links: ["Fonctionnalités", "Tarifs", "Comment ça marche", "Présentation"] },
-            { title: "Entreprise", links: ["À propos", "Blog", "Carrières", "Presse"] },
-            { title: "Légal", links: ["Politique de confidentialité", "Conditions d'utilisation", "Politique cookies", "RGPD"] },
-          ].map((col, i) => (
+          {[ { title: "Produit", links: ["Fonctionnalités","Tarifs","Comment ça marche"] }, { title: "Entreprise", links: ["À propos","Contact"] }, { title: "Légal", links: ["Confidentialité","CGV"] } ].map((col, i) => (
             <div key={i}>
-              <h4 className="text-white font-semibold text-sm mb-4">{col.title}</h4>
-              <ul className="space-y-3">
-                {col.links.map(l => <li key={l}><a href="#" className="text-gray-500 hover:text-white text-sm transition-colors">{l}</a></li>)}
+              <h4 style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 800, color: "var(--text-main)", marginBottom: 20 }}>{col.title}</h4>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 12 }}>
+                {col.links.map(l => <li key={l}><a href="#" style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "var(--text-muted)", textDecoration: "none", fontWeight: "500" }}>{l}</a></li>)}
               </ul>
             </div>
           ))}
         </div>
-        <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-gray-600 text-sm">© 2025 Dimacard. Tous droits réservés.</p>
-          <p className="text-gray-600 text-sm">Fait avec ❤️ pour les networkers modernes</p>
+        <div style={{ borderTop: "1px solid var(--border-light)", paddingTop: 32, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "var(--text-muted)", fontWeight: "500" }}>© 2026 Dimacard.</p>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "var(--text-muted)", fontWeight: "500" }}>Fait avec ❤️</p>
         </div>
       </div>
     </footer>
   );
 }
 
-// ─── App ───────────────────────────────────────────────────────────────────
-export default function App() {
-  const [dark, setDark] = useState(false);
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark);
-  }, [dark]);
+// ─── PAGE PRODUIT DYNAMIQUE AVEC FORMULAIRE DE COMMANDE ──────────────────────
+function ProductPage({ productId, setCurrentPage }) {
+  const product = productsData[productId] || productsData['matte-black'];
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [orderData, setOrderData] = useState({ fullName: '', jobTitle: '', company: '', phone: '', email: '', linkedin: '' });
+
+  const handleOrderSubmit = (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    // Simulation d'envoi de commande (À lier avec ton Apps Script plus tard)
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setIsSuccess(true);
+      setOrderData({ fullName: '', jobTitle: '', company: '', phone: '', email: '', linkedin: '' });
+      setTimeout(() => setIsSuccess(false), 5000);
+    }, 1500);
+  };
+
   return (
-    <div className={`font-sans antialiased ${dark ? "dark" : ""}`}>
-      <Navbar dark={dark} toggleDark={() => setDark(d => !d)} />
-      <Hero />
-      <Features />
-      <HowItWorks />
-      <Showcase />
-      <ForWho />
-      <Pricing />
-      <Testimonials />
-      <Contact />
-      <CTA />
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="pt-32 pb-20 px-6 max-w-7xl mx-auto min-h-screen">
+      <button onClick={() => setCurrentPage('home')} className="mb-8 flex items-center gap-2 text-slate-500 hover:text-[#00D66B] transition-colors font-bold bg-transparent border-none cursor-pointer">
+        <ArrowLeft className="w-5 h-5" /> Retour
+      </button>
+
+      {/* SÉLECTEUR DE MODÈLE */}
+      <div className="flex gap-4 mb-12 overflow-x-auto pb-4 scrollbar-hide">
+        {Object.values(productsData).map(p => (
+          <button 
+            key={p.id} 
+            onClick={() => setCurrentPage(`product_${p.id}`)}
+            className={`px-6 py-3 rounded-full font-bold whitespace-nowrap transition-all border-2 cursor-pointer ${product.id === p.id ? 'bg-[#00D66B] text-white border-[#00D66B] shadow-lg shadow-[#00D66B]/30' : 'bg-white text-slate-600 border-slate-200 hover:border-[#00D66B]/50'}`}
+          >
+            {p.name}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+        {/* COLONNE GAUCHE : IMAGE ET INFOS */}
+        <div className="space-y-8">
+          <div className="relative aspect-square rounded-3xl overflow-hidden flex items-center justify-center p-8 sm:p-16 shadow-2xl" style={{ background: product.bgGradient }}>
+            <div className="w-full h-full card-3d-anim relative">
+               <DimacardPhysical product={product} />
+            </div>
+          </div>
+          <div>
+            <div className="inline-block px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4 border" style={{ color: product.themeColor, backgroundColor: `${product.themeColor}15`, borderColor: `${product.themeColor}30` }}>
+              {product.tag}
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-black text-slate-900 leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
+              DimaCard <span style={{ color: product.themeColor }}>{product.name}</span>
+            </h1>
+            <p className="text-lg text-slate-600 mt-4 leading-relaxed">{product.desc}</p>
+          </div>
+          <div className="space-y-4">
+            {product.features.map((feat, i) => (
+              <div key={i} className="flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                <Check className="w-6 h-6 shrink-0" style={{ color: product.themeColor }} />
+                <span className="font-bold text-slate-800">{feat}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* COLONNE DROITE : FORMULAIRE DE COMMANDE */}
+        <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#00D66B]/5 blur-[80px] rounded-full pointer-events-none" />
+          
+          <div className="flex justify-between items-end mb-8 border-b border-slate-100 pb-6">
+            <div>
+              <h2 className="text-2xl font-black text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>Personnalisez votre carte</h2>
+              <p className="text-sm text-slate-500 mt-1">Saisissez les infos à configurer sur la puce.</p>
+            </div>
+            <span className="text-3xl font-black" style={{ color: product.themeColor, fontFamily: 'var(--font-display)' }}>{product.price}</span>
+          </div>
+
+          <form onSubmit={handleOrderSubmit} className="space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 flex items-center gap-2"><UserPlus className="w-4 h-4 text-[#00D66B]" /> Nom Complet</label>
+                <input type="text" required value={orderData.fullName} onChange={e => setOrderData({...orderData, fullName: e.target.value})} className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-[#00D66B] focus:ring-1" placeholder="Ex: Jean Dupont" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 flex items-center gap-2"><Briefcase className="w-4 h-4 text-[#00D66B]" /> Fonction</label>
+                <input type="text" required value={orderData.jobTitle} onChange={e => setOrderData({...orderData, jobTitle: e.target.value})} className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-[#00D66B] focus:ring-1" placeholder="Ex: CEO & Fondateur" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700 flex items-center gap-2"><Building className="w-4 h-4 text-[#00D66B]" /> Nom de l'Entreprise</label>
+              <input type="text" value={orderData.company} onChange={e => setOrderData({...orderData, company: e.target.value})} className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-[#00D66B] focus:ring-1" placeholder="Ex: DimaTech S.A.R.L" />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 flex items-center gap-2"><Phone className="w-4 h-4 text-[#00D66B]" /> Téléphone pro</label>
+                <input type="tel" required value={orderData.phone} onChange={e => setOrderData({...orderData, phone: e.target.value})} className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-[#00D66B] focus:ring-1" placeholder="+212 6 XX XX XX XX" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 flex items-center gap-2"><Mail className="w-4 h-4 text-[#00D66B]" /> Email pro</label>
+                <input type="email" required value={orderData.email} onChange={e => setOrderData({...orderData, email: e.target.value})} className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-[#00D66B] focus:ring-1" placeholder="contact@entreprise.ma" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700 flex items-center gap-2"><Linkedin className="w-4 h-4 text-[#00D66B]" /> Lien Profil (LinkedIn / Portfolio)</label>
+              <input type="url" value={orderData.linkedin} onChange={e => setOrderData({...orderData, linkedin: e.target.value})} className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-[#00D66B] focus:ring-1" placeholder="https://linkedin.com/in/votreprofil" />
+            </div>
+
+            <button type="submit" disabled={isSubmitting || isSuccess} className={`w-full py-5 mt-4 font-black rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer text-white border-none shadow-xl ${isSuccess ? 'bg-[#00A354] shadow-[#00A354]/30' : 'bg-[#00D66B] hover:bg-[#00A354] shadow-[#00D66B]/30'} disabled:opacity-80`} style={{ fontFamily: 'var(--font-body)' }}>
+              {isSubmitting ? <><Loader className="w-6 h-6 animate-spin" /> Traitement de la commande...</> : isSuccess ? <><CheckCircle className="w-6 h-6" /> Commande Confirmée !</> : <>VALIDER MA CARTE ({product.price}) <Zap className="w-5 h-5" /></>}
+            </button>
+            <p className="text-center text-xs text-slate-400 mt-2">Paiement sécurisé à la livraison. Livraison 48h au Maroc.</p>
+          </form>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── COMPOSANT RACINE DE L'APPLICATION ───────────────────────────────────────
+export default function App() {
+  const [currentPage, setCurrentPage] = useState('home');
+
+  // Détection de la page demandée
+  const isProductPage = currentPage.startsWith('product_');
+  const productId = isProductPage ? currentPage.split('_')[1] : null;
+
+  return (
+    <div className="bg-[#FAFAFA] min-h-screen">
+      <GlobalStyles />
+      <Navbar currentPage={currentPage} setCurrentPage={setCurrentPage} />
+      
+      <AnimatePresence mode="wait">
+        {currentPage === 'home' ? (
+          <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <Hero setCurrentPage={setCurrentPage} />
+            <Features />
+            <HowItWorksCombined />
+            <Pricing setCurrentPage={setCurrentPage} />
+            <Contact />
+          </motion.div>
+        ) : isProductPage ? (
+          <ProductPage key={currentPage} productId={productId} setCurrentPage={setCurrentPage} />
+        ) : null}
+      </AnimatePresence>
+
       <Footer />
     </div>
   );
