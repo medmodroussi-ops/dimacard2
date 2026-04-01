@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as Icons from "lucide-react";
@@ -8,37 +10,48 @@ const Linkedin = Icons.Linkedin || Icons.LinkedIn || Icons.User;
 
 // ─── BASE DE DONNÉES DES CARTES ──────────────────────────────────────────────
 const productsData = {
-  'matte-black': {
-    id: 'matte-black',
-    name: 'Matte Black',
+  'etudiant': {
+    id: 'etudiant',
+    name: 'Pack Étudiant',
+    price: '99 DH',
+    tag: 'Offre Étudiante',
+    desc: 'La carte idéale pour vos événements, forums et recherches de PFE. Boostez votre réseau dès maintenant.',
+    features: ['Carte PVC Standard', 'Profil digital de base', 'Lien vers CV ou Portfolio'],
+    bgGradient: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+    textColor: '#FFFFFF',
+    themeColor: '#60A5FA'
+  },
+  'starter': {
+    id: 'starter',
+    name: 'Pack Starter',
+    price: '149 DH',
+    tag: 'L\'Essentiel',
+    desc: 'Une carte PVC haute qualité avec un lien direct vers vos réseaux. La solution la plus simple pour partager vos contacts.',
+    features: ['Carte PVC Haute Qualité', 'Profil digital fixe (non modifiable)', 'Redirection ultra-rapide'],
+    bgGradient: 'linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%)',
+    textColor: '#0F172A',
+    themeColor: '#00D66B'
+  },
+  'pro': {
+    id: 'pro',
+    name: 'Pack Pro',
     price: '299 DH',
-    tag: 'Best-Seller',
-    desc: 'Finition luxe ultra-résistante. L\'élégance absolue pour les professionnels exigeants.',
-    features: ['Finition Soft-Touch Anti-Rayures', 'Puce NTAG213 Ultra Rapide', 'Fonctionne sans application'],
+    tag: 'Recommandé',
+    desc: 'Prenez le contrôle de votre identité. Modifiez vos informations à tout moment et accédez à une plateforme complète.',
+    features: ['Carte PVC Premium', 'Profil 100% Modifiable', 'Accès plateforme & Statistiques'],
     bgGradient: 'linear-gradient(135deg, #1A1A1E 0%, #0A0A0C 100%)',
     textColor: '#FFFFFF',
     themeColor: '#00D66B'
   },
-  'eco-bamboo': {
-    id: 'eco-bamboo',
-    name: 'Eco Bamboo',
-    price: '249 DH',
-    tag: '100% Écologique',
-    desc: 'Bois de bambou véritable gravé au laser. Démarquez-vous tout en respectant l\'environnement.',
-    features: ['Bois de bambou naturel', 'Gravure Laser Inaltérable', 'Texture unique pour chaque carte'],
-    bgGradient: 'linear-gradient(135deg, #C19A6B 0%, #8B5A2B 100%)',
-    textColor: '#3E2723',
-    themeColor: '#00A354'
-  },
-  'premium-metal': {
-    id: 'premium-metal',
-    name: 'Premium Metal',
-    price: '499 DH',
-    tag: 'Édition Limitée',
-    desc: 'Acier inoxydable brossé lourd et imposant. Une carte que vos clients n\'oublieront jamais.',
-    features: ['Acier Inoxydable 18g', 'Finition Or ou Argent brossé', 'Puce isolée anti-interférences'],
-    bgGradient: 'linear-gradient(135deg, #E6C27A 0%, #B8860B 100%)',
-    textColor: '#1A1A1A',
+  'entreprise': {
+    id: 'entreprise',
+    name: 'Pack Entreprise',
+    price: 'Sur devis',
+    tag: 'Sur Mesure',
+    desc: 'Équipez vos collaborateurs avec des cartes NFC aux couleurs de votre entreprise. À partir de 5 cartes.',
+    features: ['Design 100% personnalisé (Logo etc.)', 'Dashboard d\'équipe', 'Déploiement sur mesure'],
+    bgGradient: 'linear-gradient(135deg, #0F172A 0%, #020617 100%)',
+    textColor: '#FFFFFF',
     themeColor: '#D500F9'
   }
 };
@@ -157,7 +170,6 @@ function Particles({ count = 15, color = "#00D66B" }) {
 }
 
 function DimacardPhysical({ product }) {
-  // S'il n'y a pas de produit sélectionné (ex: Hero section), on affiche la carte par défaut (Matte Black)
   const bg = product ? product.bgGradient : 'linear-gradient(135deg, #1A1A1E 0%, #0A0A0C 100%)';
   const textCol = product ? product.textColor : '#FFFFFF';
   const themeCol = product ? product.themeColor : 'var(--dima-green)';
@@ -206,7 +218,7 @@ function Navbar({ currentPage, setCurrentPage }) {
             <button onClick={() => setCurrentPage('home')} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 600, color: currentPage === 'home' ? "var(--dima-green)" : "var(--text-muted)", transition: "color 0.2s" }}>
               Accueil
             </button>
-            <button onClick={() => setCurrentPage('product_matte-black')} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 600, color: currentPage.startsWith('product') ? "var(--dima-green)" : "var(--text-muted)", transition: "color 0.2s" }}>
+            <button onClick={() => setCurrentPage('product_pro')} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 600, color: currentPage.startsWith('product') ? "var(--dima-green)" : "var(--text-muted)", transition: "color 0.2s" }}>
               Boutique
             </button>
           </div>
@@ -253,7 +265,7 @@ function Hero({ setCurrentPage }) {
               Partagez vos coordonnées en un seul geste. Une carte physique intelligente pour des connexions digitales illimitées.
             </p>
             <div className="hero-buttons fade-up" style={{ animationDelay: "0.5s", display: "flex", gap: 16, marginBottom: 44 }}>
-              <button onClick={() => setCurrentPage('product_matte-black')} style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "16px 32px", borderRadius: 16, background: "var(--dima-green)", color: "#fff", fontFamily: "var(--font-body)", fontWeight: 800, fontSize: 15, border: "none", cursor: "pointer", boxShadow: "0 10px 25px rgba(0,230,118,0.3)" }}>
+              <button onClick={() => setCurrentPage('product_pro')} style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "16px 32px", borderRadius: 16, background: "var(--dima-green)", color: "#fff", fontFamily: "var(--font-body)", fontWeight: 800, fontSize: 15, border: "none", cursor: "pointer", boxShadow: "0 10px 25px rgba(0,230,118,0.3)" }}>
                 Obtenir ma carte
               </button>
               <a href="#showcase" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "16px 32px", borderRadius: 16, background: "#fff", border: "1px solid var(--border-light)", color: "var(--text-main)", fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 15, textDecoration: "none", boxShadow: "0 5px 15px rgba(0,0,0,0.03)" }}>Comment ça marche</a>
@@ -263,7 +275,7 @@ function Hero({ setCurrentPage }) {
           <div className="hero-card-container fade-up mobile-no-3d" style={{ animationDelay: "0.3s", display: "flex", flexDirection: "column", alignItems: "center", gap: 40, transformStyle: "preserve-3d", transform: `translateZ(50px) rotateY(${mousePos.x * -10}deg) rotateX(${mousePos.y * 10}deg)`, transition: "transform 0.2s ease-out" }}>
             <div style={{ perspective: "1500px", position: "relative", width: "100%", maxWidth: 420, aspectRatio: "1.58" }}>
               <div className="card-3d-anim" style={{ width: "100%", height: "100%", position: "relative" }}>
-                <DimacardPhysical />
+                <DimacardPhysical product={productsData['pro']} />
               </div>
               <div className="shadow-p" style={{ position: "absolute", bottom: -30, left: "5%", width: "90%", height: 40, background: "radial-gradient(ellipse, rgba(0,0,0,0.15) 0%, transparent 60%)", filter: "blur(10px)" }}/>
             </div>
@@ -292,22 +304,15 @@ const featuresInfo = [
 function Features() {
   return (
     <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 bg-[#0F172A] relative overflow-hidden">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#00D66B]/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#00D66B]/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="max-w-7xl mx-auto relative z-10">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="text-center mb-20">
-        <h2 className="text-4xl sm:text-6xl font-black mb-6 tracking-tight text-white" style={{ fontFamily: 'var(--font-display)' }}>
-          L'Expérience{' '}
-          <span style={{
-            backgroundImage: 'linear-gradient(to right, #00D66B, #D500F9)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            color: 'transparent',
-            display: 'inline-block'
-          }}>
-            Premium
-          </span>
-        </h2>
+          <h2 className="text-4xl sm:text-6xl font-black mb-6 tracking-tight text-white" style={{ fontFamily: 'var(--font-display)' }}>
+            L'Expérience{' '}
+            <span style={{ backgroundImage: 'linear-gradient(to right, #00D66B, #D500F9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', color: 'transparent', display: 'inline-block' }}>
+              Premium
+            </span>
+          </h2>
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">Tout ce dont vous avez besoin pour propulser votre réseau dans une nouvelle dimension.</p>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -321,11 +326,6 @@ function Features() {
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-4 relative z-10" style={{ fontFamily: 'var(--font-display)' }}>{feature.title}</h3>
                 <p className="text-slate-300 leading-relaxed relative z-10 group-hover:text-white transition-colors">{feature.description}</p>
-                <div className="mt-8 flex items-center gap-2 text-xs font-mono text-[#00D66B] opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
-                  <Zap className="w-3 h-3 fill-current" />
-                  <span style={{ fontFamily: 'var(--font-body)' }}>DIMA-TECH READY</span>
-                </div>
-                <div className="absolute top-0 -inset-full h-full w-1/2 z-50 block transform -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:animate-shimmer pointer-events-none" />
               </div>
             </motion.div>
           ))}
@@ -364,20 +364,12 @@ function HowItWorksCombined() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="space-y-12 relative z-10">
             <div>
-            <h2 className="text-4xl sm:text-6xl font-black mb-6 tracking-tight text-white" style={{ fontFamily: 'var(--font-display)' }}>
+              <h2 className="text-4xl sm:text-6xl font-black mb-6 tracking-tight text-white" style={{ fontFamily: 'var(--font-display)' }}>
                 Comment ça{' '}
-                <span style={{
-                  backgroundImage: 'linear-gradient(to right, #00D66B, #D500F9)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  color: 'transparent',
-                  display: 'inline-block'
-                }}>
+                <span style={{ backgroundImage: 'linear-gradient(to right, #00D66B, #D500F9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', color: 'transparent', display: 'inline-block' }}>
                   marche ?
                 </span>
               </h2>
-
               <p className="text-xl text-slate-300">Passez au networking nouvelle génération en trois étapes simples.</p>
             </div>
             <div className="space-y-8">
@@ -399,8 +391,8 @@ function HowItWorksCombined() {
             </div>
           </motion.div>
 
-          <div className="relative flex justify-center items-center h-[600px] w-full">
-            <motion.div animate={{ y: scanState === 'scanning' ? 80 : -50, scale: scanState === 'scanning' ? 0.9 : 1, rotateX: scanState === 'success' ? 45 : 15, opacity: scanState === 'success' ? 0 : 1 }} transition={{ duration: 0.6, ease: "easeInOut" }} style={{ perspective: "1000px" }} className="absolute top-0 z-30 flex justify-center w-full">
+          <div className="relative flex justify-center items-center h-[600px] w-full pt-20 overflow-visible">
+            <motion.div animate={{ y: scanState === 'scanning' ? 80 : -50, scale: scanState === 'scanning' ? 0.9 : 1, rotateX: scanState === 'success' ? 45 : 15, opacity: scanState === 'success' ? 0 : 1 }} transition={{ duration: 0.6, ease: "easeInOut" }} style={{ perspective: "1000px" }} className="absolute top-0 z-50 flex justify-center w-full">
               <div className="w-40 h-28 rounded-xl bg-gradient-to-br from-[#1A1A1E] to-[#0A0A0C] border border-white/20 shadow-2xl flex items-center justify-center relative overflow-hidden transform rotate-12">
                 <div className="absolute inset-0 bg-gradient-to-tr from-[#00D66B]/20 to-transparent" />
                 <CreditCard className="text-white/50 w-6 h-6 absolute top-2 left-2" />
@@ -408,9 +400,7 @@ function HowItWorksCombined() {
                 <Nfc className="text-[#00D66B] w-5 h-5 absolute bottom-2 right-2" />
               </div>
             </motion.div>
-            <AnimatePresence>
-              {scanState === 'scanning' && <motion.div initial={{ scale: 0.5, opacity: 1 }} animate={{ scale: 2, opacity: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.8, ease: "easeOut" }} className="absolute top-24 w-32 h-32 border-4 border-[#00D66B] rounded-full z-20" />}
-            </AnimatePresence>
+            
             <div className="relative z-10 w-[280px] h-[560px] bg-gray-900 rounded-[2.5rem] border-[6px] border-gray-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
               <div className="absolute top-2 left-1/2 -translate-x-1/2 w-24 h-6 bg-black rounded-full z-50" />
               <div className="relative w-full h-full bg-[#0a0a0a]">
@@ -430,15 +420,8 @@ function HowItWorksCombined() {
                         <div className="mt-3 text-center">
                           <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>Jean Dupont</h2>
                           <p className="text-[#00D66B] font-medium text-xs mt-1">Directeur Innovation</p>
-                          <p className="text-gray-400 text-[10px] mt-1 flex items-center justify-center gap-1"><MapPin className="w-3 h-3" /> Tanger, Maroc</p>
                         </div>
                         <button className="w-full mt-4 bg-white text-black font-bold py-2 rounded-xl flex items-center justify-center gap-2 text-sm hover:bg-gray-200" style={{ fontFamily: 'var(--font-body)' }}><UserPlus className="w-4 h-4" /> Sauvegarder</button>
-                        <div className="w-full mt-6 grid grid-cols-2 gap-2">
-                          <div className="flex flex-col items-center p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"><Phone className="w-5 h-5 text-[#00D66B] mb-1" /><span className="text-[10px] text-gray-300">Appeler</span></div>
-                          <div className="flex flex-col items-center p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"><Mail className="w-5 h-5 text-[#D500F9] mb-1" /><span className="text-[10px] text-gray-300">Email</span></div>
-                          <div className="flex flex-col items-center p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"><Linkedin className="w-5 h-5 text-[#69FFB4] mb-1" /><span className="text-[10px] text-gray-300">LinkedIn</span></div>
-                          <div className="flex flex-col items-center p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"><Globe className="w-5 h-5 text-[#00D66B] mb-1" /><span className="text-[10px] text-gray-300">Site</span></div>
-                        </div>
                       </div>
                     </motion.div>
                   )}
@@ -454,49 +437,81 @@ function HowItWorksCombined() {
 
 // ─── PRICING ─────────────────────────────────────────────────────────────────
 const plans = [
-  { name: 'Starter', price: '249 DH', description: 'Le choix responsable', features: ['1 Carte Eco Bamboo', 'Profil Digital de base', 'Support Email'], highlight: false, productId: 'eco-bamboo' },
-  { name: 'Professional', price: '299 DH', description: 'Le choix des experts', features: ['1 Carte Matte Black', 'Analyses avancées', 'Support Prioritaire', 'Design sur mesure'], highlight: true, productId: 'matte-black' },
-  { name: 'Premium', price: '499 DH', description: 'Pour les dirigeants', features: ['1 Carte Premium Metal', 'Dashboard d\'équipe', 'Manager dédié', 'Accès API'], highlight: false, productId: 'premium-metal' },
+  { 
+    name: 'Étudiant', 
+    price: '99 DH', 
+    description: 'Parfait pour booster votre réseau, vos recherches de stage ou de PFE.', 
+    features: ['1 Carte PVC standard', 'Profil digital de base', 'Idéal pour les événements'], 
+    highlight: false, 
+    productId: 'etudiant' 
+  },
+  { 
+    name: 'Starter', 
+    price: '149 DH', 
+    description: 'La solution simple et immédiate pour partager vos coordonnées.', 
+    features: ['1 Carte PVC haute qualité', 'Lien de profil direct', 'Profil digital fixe'], 
+    highlight: false, 
+    productId: 'starter' 
+  },
+  { 
+    name: 'Pro', 
+    price: '299 DH', 
+    description: 'Prenez le contrôle total de votre identité professionnelle.', 
+    features: ['1 Carte PVC Premium', 'Profil 100% modifiable', 'Accès complet à la plateforme'], 
+    highlight: true, 
+    productId: 'pro' 
+  },
+  { 
+    name: 'Entreprise', 
+    price: 'Sur devis', 
+    description: 'Une solution sur-mesure à partir de 5 collaborateurs.', 
+    features: ['Cartes 100% personnalisées', 'Plus de 5 cartes', 'Gestion centralisée'], 
+    highlight: false, 
+    productId: 'entreprise' 
+  },
 ];
 
 function Pricing({ setCurrentPage }) {
   return (
     <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 bg-[#FAFAFA] relative overflow-hidden">
       <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-[#00D66B]/10 blur-[120px] rounded-full pointer-events-none" />
-      <div className="max-w-6xl mx-auto relative z-10">
+      <div className="max-w-7xl mx-auto relative z-10">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="text-center mb-16 space-y-4">
-        <h2 className="text-4xl sm:text-6xl font-black mb-6 tracking-tight text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
-          Passez au{' '}
-          <span style={{
-            backgroundImage: 'linear-gradient(to right, #00D66B, #D500F9)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            color: 'transparent',
-            display: 'inline-block'
-          }}>
-            Networking 2.0
-          </span>
-        </h2>
+          <h2 className="text-4xl sm:text-6xl font-black mb-6 tracking-tight text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
+            Passez au{' '}
+            <span style={{ backgroundImage: 'linear-gradient(to right, #00D66B, #D500F9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', color: 'transparent', display: 'inline-block' }}>
+              Networking 2.0
+            </span>
+          </h2>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto" style={{ fontFamily: 'var(--font-body)' }}>Choisissez l'offre DimaCard qui correspond à vos ambitions.</p>
         </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
           {plans.map((plan, index) => (
-            <motion.div key={index} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} whileHover={{ y: -10 }} transition={{ duration: 0.5, delay: index * 0.1 }} viewport={{ once: true }} className={`relative p-8 rounded-3xl transition-all duration-500 flex flex-col h-full ${plan.highlight ? 'bg-white border-2 border-[#00D66B] shadow-[0_20px_50px_rgba(0,214,107,0.15)] scale-105 z-20' : 'bg-white border border-slate-200 hover:border-[#00D66B]/30 shadow-sm z-10'}`}>
-              {plan.highlight && <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#00D66B] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1"><Sparkles className="w-3 h-3" /> Recommandé</div>}
+            <motion.div key={index} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} whileHover={{ y: -10 }} transition={{ duration: 0.5, delay: index * 0.1 }} viewport={{ once: true }} className={`relative p-6 xl:p-8 rounded-3xl transition-all duration-500 flex flex-col h-full ${plan.highlight ? 'bg-white border-2 border-[#00D66B] shadow-[0_20px_50px_rgba(0,214,107,0.15)] md:scale-105 z-20' : 'bg-white border border-slate-200 hover:border-[#00D66B]/30 shadow-sm z-10'}`}>
+              {plan.highlight && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#00D66B] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1 whitespace-nowrap">
+                  <Sparkles className="w-3 h-3" /> Recommandé
+                </div>
+              )}
               <div className="mb-8">
                 <h3 className="text-xl font-bold text-slate-900 mb-2" style={{ fontFamily: 'var(--font-display)' }}>{plan.name}</h3>
-                <p className="text-sm text-slate-500 mb-6" style={{ fontFamily: 'var(--font-body)' }}>{plan.description}</p>
+                <p className="text-sm text-slate-500 mb-6 min-h-[60px]" style={{ fontFamily: 'var(--font-body)' }}>{plan.description}</p>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-black text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>{plan.price}</span>
-                  {plan.price !== 'Sur devis' && <span className="text-slate-500 text-sm" style={{ fontFamily: 'var(--font-body)' }}>/une fois</span>}
+                  <span className="text-3xl xl:text-4xl font-black text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>{plan.price}</span>
+                  {plan.price !== 'Sur devis' && <span className="text-slate-500 text-xs" style={{ fontFamily: 'var(--font-body)' }}>/une fois</span>}
                 </div>
               </div>
               <ul className="space-y-4 mb-10 flex-grow">
-                {plan.features.map((feature, i) => <li key={i} className="flex items-start gap-3 text-sm text-slate-600" style={{ fontFamily: 'var(--font-body)' }}><Check className={`w-5 h-5 shrink-0 ${plan.highlight ? 'text-[#00D66B]' : 'text-slate-400'}`} /><span>{feature}</span></li>)}
+                {plan.features.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-slate-600" style={{ fontFamily: 'var(--font-body)' }}>
+                    <Check className={`w-5 h-5 shrink-0 mt-0.5 ${plan.highlight ? 'text-[#00D66B]' : 'text-slate-400'}`} />
+                    <span>{feature}</span>
+                  </li>
+                ))}
               </ul>
-              <button onClick={() => setCurrentPage(`product_${plan.productId}`)} className={`w-full py-4 rounded-xl font-bold transition-all duration-300 cursor-pointer border-none ${plan.highlight ? 'bg-[#00D66B] text-white hover:bg-[#00A354] shadow-lg shadow-[#00D66B]/20' : 'bg-slate-100 text-slate-900 hover:bg-slate-200'}`} style={{ fontFamily: 'var(--font-body)' }}>
-                Configurer ce modèle
+              <button onClick={() => setCurrentPage(`product_${plan.productId}`)} className={`w-full py-4 px-2 rounded-xl font-bold transition-all duration-300 cursor-pointer border-none text-sm xl:text-base ${plan.highlight ? 'bg-[#00D66B] text-white hover:bg-[#00A354] shadow-lg shadow-[#00D66B]/20' : 'bg-slate-100 text-slate-900 hover:bg-slate-200'}`} style={{ fontFamily: 'var(--font-body)' }}>
+                {plan.price === 'Sur devis' ? 'Demander un devis' : 'Configurer ce modèle'}
               </button>
             </motion.div>
           ))}
@@ -543,19 +558,12 @@ function Contact() {
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#00D66B]/10 blur-[100px] rounded-full pointer-events-none" />
       <div className="max-w-7xl mx-auto relative z-10">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="text-center mb-16">
-        <h2 className="text-4xl sm:text-6xl font-black mb-6 tracking-tight text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
-          Prêt à faire le{' '}
-          <span style={{
-            backgroundImage: 'linear-gradient(to right, #00D66B, #D500F9)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            color: 'transparent',
-            display: 'inline-block'
-          }}>
-            premier pas ?
-          </span>
-        </h2>
+          <h2 className="text-4xl sm:text-6xl font-black mb-6 tracking-tight text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
+            Prêt à faire le{' '}
+            <span style={{ backgroundImage: 'linear-gradient(to right, #00D66B, #D500F9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', color: 'transparent', display: 'inline-block' }}>
+              premier pas ?
+            </span>
+          </h2>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto" style={{ fontFamily: 'var(--font-body)' }}>Contactez l'équipe DimaCard pour une démo ou une commande personnalisée.</p>
         </motion.div>
 
@@ -567,8 +575,8 @@ function Contact() {
             </div>
             <div className="space-y-6">
               <div className="flex items-start gap-4"><div className="w-12 h-12 rounded-xl bg-[#00D66B]/10 border border-[#00D66B]/20 flex items-center justify-center shrink-0"><Mail className="w-5 h-5 text-[#00D66B]" /></div><div><h4 className="text-slate-900 font-bold mb-1">Email</h4><a href="mailto:contact@dimacard.ma" className="text-slate-600 hover:text-[#00D66B] transition-colors text-sm font-medium">contact@dimacard.ma</a></div></div>
-              <div className="flex items-start gap-4"><div className="w-12 h-12 rounded-xl bg-[#00D66B]/10 border border-[#00D66B]/20 flex items-center justify-center shrink-0"><Phone className="w-5 h-5 text-[#00D66B]" /></div><div><h4 className="text-slate-900 font-bold mb-1">Téléphone</h4><a href="tel:+212600000000" className="text-slate-600 hover:text-[#00D66B] transition-colors text-sm font-medium">+212 6 00 00 00 00</a></div></div>
-              <div className="flex items-start gap-4"><div className="w-12 h-12 rounded-xl bg-[#00D66B]/10 border border-[#00D66B]/20 flex items-center justify-center shrink-0"><MapPin className="w-5 h-5 text-[#00D66B]" /></div><div><h4 className="text-slate-900 font-bold mb-1">Laboratoire & Bureau</h4><p className="text-slate-600 text-sm font-medium">Zone Technologique<br />Tanger, Maroc</p></div></div>
+              <div className="flex items-start gap-4"><div className="w-12 h-12 rounded-xl bg-[#00D66B]/10 border border-[#00D66B]/20 flex items-center justify-center shrink-0"><Phone className="w-5 h-5 text-[#00D66B]" /></div><div><h4 className="text-slate-900 font-bold mb-1">Téléphone</h4><a href="tel:+212708066509" className="text-slate-600 hover:text-[#00D66B] transition-colors text-sm font-medium">+212 6 00 00 00 00</a></div></div>
+              <div className="flex items-start gap-4"><div className="w-12 h-12 rounded-xl bg-[#00D66B]/10 border border-[#00D66B]/20 flex items-center justify-center shrink-0"><MapPin className="w-5 h-5 text-[#00D66B]" /></div><div><h4 className="text-slate-900 font-bold mb-1"> Bureau</h4><p className="text-slate-600 text-sm font-medium">Tanger, Maroc</p></div></div>
             </div>
           </motion.div>
 
@@ -624,7 +632,7 @@ function Footer() {
 
 // ─── PAGE PRODUIT DYNAMIQUE AVEC FORMULAIRE DE COMMANDE ──────────────────────
 function ProductPage({ productId, setCurrentPage }) {
-  const product = productsData[productId] || productsData['matte-black'];
+  const product = productsData[productId] || productsData['pro'];
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -633,7 +641,6 @@ function ProductPage({ productId, setCurrentPage }) {
   const handleOrderSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulation d'envoi de commande (À lier avec ton Apps Script plus tard)
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSuccess(true);
@@ -662,19 +669,23 @@ function ProductPage({ productId, setCurrentPage }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+        
         {/* COLONNE GAUCHE : IMAGE ET INFOS */}
         <div className="space-y-8">
-          <div className="relative aspect-square rounded-3xl overflow-hidden flex items-center justify-center p-8 sm:p-16 shadow-2xl" style={{ background: product.bgGradient }}>
-            <div className="w-full h-full card-3d-anim relative">
+          
+          {/* CORRECTION ICI : aspect-square retiré, utilisation de aspect-[1.58] sur la carte pour respecter la forme d'une carte de visite */}
+          <div className="relative rounded-3xl overflow-hidden flex items-center justify-center p-8 sm:p-16 shadow-2xl" style={{ background: `${product.bgGradient}80`, minHeight: '400px' }}>
+            <div className="w-full max-w-[420px] relative card-3d-anim" style={{ aspectRatio: '1.58' }}>
                <DimacardPhysical product={product} />
             </div>
           </div>
+          
           <div>
             <div className="inline-block px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4 border" style={{ color: product.themeColor, backgroundColor: `${product.themeColor}15`, borderColor: `${product.themeColor}30` }}>
               {product.tag}
             </div>
             <h1 className="text-4xl sm:text-5xl font-black text-slate-900 leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
-              DimaCard <span style={{ color: product.themeColor }}>{product.name}</span>
+              {product.name}
             </h1>
             <p className="text-lg text-slate-600 mt-4 leading-relaxed">{product.desc}</p>
           </div>
