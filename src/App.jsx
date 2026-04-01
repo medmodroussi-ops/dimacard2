@@ -6,7 +6,7 @@ import * as Icons from "lucide-react";
 
 // Import universel pour éviter les erreurs de version
 const { Zap, Smartphone, Share2, Nfc, UserPlus, Mail, Phone, Globe, MapPin, CreditCard, BarChart, Palette, Check, Sparkles, Send, CheckCircle, Loader, ArrowLeft, Briefcase, Building } = Icons;
-const Linkedin = Icons.Linkedin || Icons.LinkedIn || Icons.User;
+const Linkedin = Icons.Linkedin || Icons.User;
 
 // ─── BASE DE DONNÉES DES CARTES ──────────────────────────────────────────────
 const productsData = {
@@ -16,10 +16,7 @@ const productsData = {
     price: '99 DH',
     tag: 'Offre Étudiante',
     desc: 'La carte idéale pour vos événements, forums et recherches de PFE. Boostez votre réseau dès maintenant.',
-    features: ['Carte PVC Standard', 'Profil digital de base', 'Lien vers CV ou Portfolio'],
-    bgGradient: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
-    textColor: '#FFFFFF',
-    themeColor: '#60A5FA'
+    features: ['Carte PVC Blanche Standard', 'Profil digital de base', 'Lien vers CV ou Portfolio'],
   },
   'starter': {
     id: 'starter',
@@ -28,9 +25,6 @@ const productsData = {
     tag: 'L\'Essentiel',
     desc: 'Une carte PVC haute qualité avec un lien direct vers vos réseaux. La solution la plus simple pour partager vos contacts.',
     features: ['Carte PVC Haute Qualité', 'Profil digital fixe (non modifiable)', 'Redirection ultra-rapide'],
-    bgGradient: 'linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%)',
-    textColor: '#0F172A',
-    themeColor: '#00D66B'
   },
   'pro': {
     id: 'pro',
@@ -39,9 +33,6 @@ const productsData = {
     tag: 'Recommandé',
     desc: 'Prenez le contrôle de votre identité. Modifiez vos informations à tout moment et accédez à une plateforme complète.',
     features: ['Carte PVC Premium', 'Profil 100% Modifiable', 'Accès plateforme & Statistiques'],
-    bgGradient: 'linear-gradient(135deg, #1A1A1E 0%, #0A0A0C 100%)',
-    textColor: '#FFFFFF',
-    themeColor: '#00D66B'
   },
   'entreprise': {
     id: 'entreprise',
@@ -50,9 +41,6 @@ const productsData = {
     tag: 'Sur Mesure',
     desc: 'Équipez vos collaborateurs avec des cartes NFC aux couleurs de votre entreprise. À partir de 5 cartes.',
     features: ['Design 100% personnalisé (Logo etc.)', 'Dashboard d\'équipe', 'Déploiement sur mesure'],
-    bgGradient: 'linear-gradient(135deg, #0F172A 0%, #020617 100%)',
-    textColor: '#FFFFFF',
-    themeColor: '#D500F9'
   }
 };
 
@@ -73,6 +61,7 @@ function GlobalStyles() {
         --dima-green-light: #69FFB4;
         --dima-green-dark: #00A354;
         --dima-magenta: #D500F9; 
+        --dima-cyan: #00FFFF;
         
         --bg-light: #FAFAFA;
         --bg-white: #FFFFFF;
@@ -110,15 +99,8 @@ function GlobalStyles() {
       .brand-logo-text { font-family: var(--font-logo); color: var(--dima-green); text-shadow: -2px 3px 0px var(--dima-magenta); transform: skewX(-6deg); line-height: 1; letter-spacing: 2px; }
       
       .bg-grid-3d { position: absolute; width: 200%; height: 120%; bottom: -40%; left: -50%; background-image: linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px); background-size: 60px 60px; transform: perspective(600px) rotateX(75deg); animation: gridMove 3s linear infinite; mask-image: radial-gradient(ellipse at center, black 10%, transparent 60%); -webkit-mask-image: radial-gradient(ellipse at center, black 10%, transparent 60%); pointer-events: none; }
-      .card-texture-stripes { background: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.03) 10px, transparent 10px, transparent 20px); }
-
-      .tilt-card { transform-style: preserve-3d; background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 24px; box-shadow: var(--shadow-soft); transition: box-shadow 0.3s ease; }
-      .tilt-card:hover { box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
-      .tilt-content { transform: translateZ(40px); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-      .tilt-card:hover .tilt-content { transform: translateZ(70px); }
-
-      .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-      .animate-shimmer { animation: shimmer 2.5s infinite; }
+      
+      .card-texture-stripes { background: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.02) 10px, transparent 10px, transparent 20px); }
 
       ::-webkit-scrollbar { width: 6px; }
       ::-webkit-scrollbar-track { background: var(--bg-light); }
@@ -138,8 +120,6 @@ function GlobalStyles() {
         .contact-info { justify-content: center; flex-direction: column; align-items: center; }
         .footer-grid { grid-template-columns: 1fr !important; gap: 40px !important; text-align: center; }
         .footer-socials { justify-content: center; }
-        .tilt-card { transform: none !important; }
-        .tilt-content { transform: none !important; }
         .mobile-no-3d { transform: none !important; }
       }
       @media (min-width: 769px) {
@@ -169,30 +149,31 @@ function Particles({ count = 15, color = "#00D66B" }) {
   );
 }
 
-function DimacardPhysical({ product }) {
-  const bg = product ? product.bgGradient : 'linear-gradient(135deg, #1A1A1E 0%, #0A0A0C 100%)';
-  const textCol = product ? product.textColor : '#FFFFFF';
-  const themeCol = product ? product.themeColor : 'var(--dima-green)';
+function DimacardPhysical() {
+  const bg = '#FFFFFF';
+  const border = '2px solid var(--dima-magenta)'; 
+  const logoCol = 'var(--dima-green)'; 
+  const textCol = '#000000'; 
+  const glitchShadow = '3px -3px 0px var(--dima-cyan), -3px 3px 0px var(--dima-magenta)';
 
   return (
-    <div style={{ position: "absolute", inset: 0, borderRadius: 24, background: bg, border: "1px solid rgba(255,255,255,0.1)", boxShadow: "20px 40px 60px rgba(0,0,0,0.4), inset 0 2px 10px rgba(255,255,255,0.05)", padding: "24px 8%", display: "flex", flexDirection: "column", justifyContent: "space-between", overflow: "hidden", transformStyle: "preserve-3d" }}>
-      <div className="card-texture-stripes" style={{ position: "absolute", inset: 0, opacity: 0.6, pointerEvents: "none", transform: "translateZ(-1px)" }} />
-      <div className="card-sheen-anim" style={{ position: "absolute", top: 0, left: "-100%", width: "50%", height: "100%", background: "linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.08) 50%,transparent 70%)", pointerEvents: "none", transform: "translateZ(1px)" }}/>
-      <div style={{ position: "absolute", bottom: "10%", right: "5%", width: "50%", aspectRatio: "1", borderRadius: "50%", background: "radial-gradient(circle, rgba(0,230,118,0.2) 0%, transparent 70%)", pointerEvents: "none", transform: "translateZ(-1px)" }}/>
+    <div style={{ position: "absolute", inset: 0, borderRadius: 24, background: bg, border: border, boxShadow: "20px 40px 60px rgba(0,0,0,0.15), inset 0 2px 20px rgba(213,0,249,0.05)", padding: "24px 8%", display: "flex", flexDirection: "column", justifyContent: "space-between", overflow: "hidden", transformStyle: "preserve-3d" }}>
+      <div className="card-texture-stripes" style={{ position: "absolute", inset: 0, opacity: 0.5, pointerEvents: "none", transform: "translateZ(-1px)" }} />
+      <div className="card-sheen-anim" style={{ position: "absolute", top: 0, left: "-100%", width: "50%", height: "100%", background: "linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.8) 50%,transparent 70%)", pointerEvents: "none", transform: "translateZ(1px)" }}/>
       
       <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2%", marginTop: "4%", transform: "translateZ(30px)" }}>
-        <div style={{ fontFamily: "var(--font-logo)", color: textCol, transform: "skewX(-6deg)", fontSize: "clamp(32px, 10vw, 52px)", lineHeight: 1 }}>DIMA</div>
-        <div style={{ fontFamily: "var(--font-logo)", color: themeCol, transform: "skewX(-6deg)", fontSize: "clamp(24px, 7vw, 38px)", marginLeft: "10%", lineHeight: 1 }}>CARD</div>
+        <div style={{ fontFamily: "var(--font-logo)", color: logoCol, transform: "skewX(-6deg)", fontSize: "clamp(32px, 10vw, 52px)", lineHeight: 1, textShadow: glitchShadow }}>DIMA</div>
+        <div style={{ fontFamily: "var(--font-logo)", color: logoCol, transform: "skewX(-6deg)", fontSize: "clamp(24px, 7vw, 38px)", marginLeft: "10%", lineHeight: 1, textShadow: glitchShadow }}>CARD</div>
       </div>
 
       <div style={{ position: "absolute", right: "8%", bottom: "20%", display: "flex", alignItems: "center", gap: 8, transform: "rotate(-45deg) translateZ(20px)" }}>
-        <div className="nfc-wave-1" style={{ width: 10, height: 10, borderRadius: "50%", background: themeCol, boxShadow: `0 0 10px ${themeCol}` }} />
-        <div className="nfc-wave-2" style={{ width: 20, height: 20, borderRadius: "50%", borderTop: `3px solid ${themeCol}`, borderRight: `3px solid ${themeCol}`, transform: "rotate(45deg)" }} />
-        <div className="nfc-wave-3" style={{ width: 34, height: 34, borderRadius: "50%", borderTop: `3px solid ${themeCol}`, borderRight: `3px solid ${themeCol}`, transform: "rotate(45deg) translate(-8px, 8px)" }} />
+        <div className="nfc-wave-1" style={{ width: 10, height: 10, borderRadius: "50%", background: logoCol, boxShadow: `0 0 10px ${logoCol}` }} />
+        <div className="nfc-wave-2" style={{ width: 20, height: 20, borderRadius: "50%", borderTop: `3px solid ${logoCol}`, borderRight: `3px solid ${logoCol}`, transform: "rotate(45deg)" }} />
+        <div className="nfc-wave-3" style={{ width: 34, height: 34, borderRadius: "50%", borderTop: `3px solid ${logoCol}`, borderRight: `3px solid ${logoCol}`, transform: "rotate(45deg) translate(-8px, 8px)" }} />
       </div>
 
       <div style={{ position: "relative", zIndex: 2, transform: "translateZ(15px)", marginBottom: "2%" }}>
-        <span style={{ fontFamily: "var(--font-body)", fontSize: "clamp(8px, 2.5vw, 10px)", color: textCol, letterSpacing: "1px", textTransform: "uppercase", opacity: 0.8 }}>SMART BUSINESS CARD</span>
+        <span style={{ fontFamily: "var(--font-body)", fontSize: "clamp(8px, 2.5vw, 10px)", color: textCol, letterSpacing: "1px", textTransform: "uppercase", fontWeight: 600 }}>SMART BUSINESS CARD</span>
       </div>
     </div>
   );
@@ -275,9 +256,9 @@ function Hero({ setCurrentPage }) {
           <div className="hero-card-container fade-up mobile-no-3d" style={{ animationDelay: "0.3s", display: "flex", flexDirection: "column", alignItems: "center", gap: 40, transformStyle: "preserve-3d", transform: `translateZ(50px) rotateY(${mousePos.x * -10}deg) rotateX(${mousePos.y * 10}deg)`, transition: "transform 0.2s ease-out" }}>
             <div style={{ perspective: "1500px", position: "relative", width: "100%", maxWidth: 420, aspectRatio: "1.58" }}>
               <div className="card-3d-anim" style={{ width: "100%", height: "100%", position: "relative" }}>
-                <DimacardPhysical product={productsData['pro']} />
+                <DimacardPhysical />
               </div>
-              <div className="shadow-p" style={{ position: "absolute", bottom: -30, left: "5%", width: "90%", height: 40, background: "radial-gradient(ellipse, rgba(0,0,0,0.15) 0%, transparent 60%)", filter: "blur(10px)" }}/>
+              <div className="shadow-p" style={{ position: "absolute", bottom: -30, left: "5%", width: "90%", height: 40, background: "radial-gradient(ellipse, rgba(0,0,0,0.1) 0%, transparent 60%)", filter: "blur(10px)" }}/>
             </div>
             <div style={{ display: "flex", gap: 0, background: "rgba(255,255,255,0.8)", backdropFilter: "blur(20px)", border: "1px solid var(--border-light)", borderRadius: 20, overflow: "hidden", transform: "translateZ(30px)", boxShadow: "0 15px 30px rgba(0,0,0,0.05)" }}>
               {[{ num: "2.4K+", label: "Pros" },{ num: "1 Tap", label: "Connexion" },{ num: "100%", label: "Écolo" }].map((s, i) => (
@@ -393,10 +374,11 @@ function HowItWorksCombined() {
 
           <div className="relative flex justify-center items-center h-[600px] w-full pt-20 overflow-visible">
             <motion.div animate={{ y: scanState === 'scanning' ? 80 : -50, scale: scanState === 'scanning' ? 0.9 : 1, rotateX: scanState === 'success' ? 45 : 15, opacity: scanState === 'success' ? 0 : 1 }} transition={{ duration: 0.6, ease: "easeInOut" }} style={{ perspective: "1000px" }} className="absolute top-0 z-50 flex justify-center w-full">
-              <div className="w-40 h-28 rounded-xl bg-gradient-to-br from-[#1A1A1E] to-[#0A0A0C] border border-white/20 shadow-2xl flex items-center justify-center relative overflow-hidden transform rotate-12">
-                <div className="absolute inset-0 bg-gradient-to-tr from-[#00D66B]/20 to-transparent" />
-                <CreditCard className="text-white/50 w-6 h-6 absolute top-2 left-2" />
-                <span className="text-white font-bold text-lg tracking-widest z-10" style={{ fontFamily: 'var(--font-logo)', textShadow: '-1.5px 2px 0px var(--dima-magenta)' }}>DIMA</span>
+              {/* Petite Carte Glitch dans l'animation */}
+              <div className="w-40 h-28 rounded-xl bg-white border-2 border-[#D500F9] shadow-2xl flex items-center justify-center relative overflow-hidden transform rotate-12">
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#00D66B]/5 to-transparent" />
+                <CreditCard className="text-slate-300 w-6 h-6 absolute top-2 left-2" />
+                <span className="text-[#00D66B] font-bold text-lg tracking-widest z-10" style={{ fontFamily: 'var(--font-logo)', textShadow: '1.5px -1.5px 0px #00FFFF, -1.5px 1.5px 0px #D500F9' }}>DIMA</span>
                 <Nfc className="text-[#00D66B] w-5 h-5 absolute bottom-2 right-2" />
               </div>
             </motion.div>
@@ -420,8 +402,33 @@ function HowItWorksCombined() {
                         <div className="mt-3 text-center">
                           <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>Jean Dupont</h2>
                           <p className="text-[#00D66B] font-medium text-xs mt-1">Directeur Innovation</p>
+                          <p className="text-gray-400 text-[10px] mt-1 flex items-center justify-center gap-1"><MapPin className="w-3 h-3" /> Tanger, Maroc</p>
                         </div>
-                        <button className="w-full mt-4 bg-white text-black font-bold py-2 rounded-xl flex items-center justify-center gap-2 text-sm hover:bg-gray-200" style={{ fontFamily: 'var(--font-body)' }}><UserPlus className="w-4 h-4" /> Sauvegarder</button>
+                        
+                        <button className="w-full mt-4 bg-white text-black font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm hover:bg-gray-200 transition-colors" style={{ fontFamily: 'var(--font-body)' }}>
+                          <UserPlus className="w-4 h-4" /> Enregistrer le contact
+                        </button>
+
+                        {/* NOUVELLES INFORMATIONS DE CONTACT */}
+                        <div className="w-full mt-5 grid grid-cols-2 gap-3">
+                          <div className="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors cursor-pointer text-center">
+                            <Phone className="w-5 h-5 text-[#00D66B] mb-2" />
+                            <span className="text-[10px] text-gray-300 font-medium">+212 600 000 000</span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors cursor-pointer text-center">
+                            <Mail className="w-5 h-5 text-[#D500F9] mb-2" />
+                            <span className="text-[10px] text-gray-300 font-medium">jean@dupont.ma</span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors cursor-pointer text-center">
+                            <Linkedin className="w-5 h-5 text-[#00FFFF] mb-2" />
+                            <span className="text-[10px] text-gray-300 font-medium">/in/jeandupont</span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors cursor-pointer text-center">
+                            <Globe className="w-5 h-5 text-[#00D66B] mb-2" />
+                            <span className="text-[10px] text-gray-300 font-medium">www.dupont.ma</span>
+                          </div>
+                        </div>
+
                       </div>
                     </motion.div>
                   )}
@@ -441,7 +448,7 @@ const plans = [
     name: 'Étudiant', 
     price: '99 DH', 
     description: 'Parfait pour booster votre réseau, vos recherches de stage ou de PFE.', 
-    features: ['1 Carte PVC standard', 'Profil digital de base', 'Idéal pour les événements'], 
+    features: ['1 Carte PVC Glitch', 'Profil digital de base', 'Idéal pour les événements'], 
     highlight: false, 
     productId: 'etudiant' 
   },
@@ -449,7 +456,7 @@ const plans = [
     name: 'Starter', 
     price: '149 DH', 
     description: 'La solution simple et immédiate pour partager vos coordonnées.', 
-    features: ['1 Carte PVC haute qualité', 'Lien de profil direct', 'Profil digital fixe'], 
+    features: ['1 Carte PVC Glitch', 'Lien de profil direct', 'Profil digital fixe'], 
     highlight: false, 
     productId: 'starter' 
   },
@@ -457,7 +464,7 @@ const plans = [
     name: 'Pro', 
     price: '299 DH', 
     description: 'Prenez le contrôle total de votre identité professionnelle.', 
-    features: ['1 Carte PVC Premium', 'Profil 100% modifiable', 'Accès complet à la plateforme'], 
+    features: ['1 Carte Glitch Premium', 'Profil 100% modifiable', 'Accès complet à la plateforme'], 
     highlight: true, 
     productId: 'pro' 
   },
@@ -533,6 +540,7 @@ function Contact() {
     e.preventDefault();
     setIsSubmitting(true);
     const dataToSend = new FormData();
+    dataToSend.append('type', 'Contact'); // Optionnel, pour ton Sheet
     dataToSend.append('name', formData.name);
     dataToSend.append('email', formData.email);
     dataToSend.append('subject', formData.subject);
@@ -638,15 +646,35 @@ function ProductPage({ productId, setCurrentPage }) {
   const [isSuccess, setIsSuccess] = useState(false);
   const [orderData, setOrderData] = useState({ fullName: '', jobTitle: '', company: '', phone: '', email: '', linkedin: '' });
 
-  const handleOrderSubmit = (e) => {
+  // URL DU SCRIPT GOOGLE APPS (La même que pour le contact)
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxa15n3I42jHSZGnjmBnXvmqSEhvzDml4GkgfqsP-fZsGvVkOkmC1n7pQvv7BPFlPh/exec';
+
+  const handleOrderSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+
+    const dataToSend = new FormData();
+    dataToSend.append('type', 'Commande'); // Permet de distinguer avec le form contact
+    dataToSend.append('product', product.name);
+    dataToSend.append('price', product.price);
+    dataToSend.append('fullName', orderData.fullName);
+    dataToSend.append('jobTitle', orderData.jobTitle);
+    dataToSend.append('company', orderData.company);
+    dataToSend.append('phone', orderData.phone);
+    dataToSend.append('email', orderData.email);
+    dataToSend.append('linkedin', orderData.linkedin);
+
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: dataToSend });
       setIsSuccess(true);
       setOrderData({ fullName: '', jobTitle: '', company: '', phone: '', email: '', linkedin: '' });
       setTimeout(() => setIsSuccess(false), 5000);
-    }, 1500);
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert("Erreur de connexion lors de l'envoi de la commande.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -673,15 +701,14 @@ function ProductPage({ productId, setCurrentPage }) {
         {/* COLONNE GAUCHE : IMAGE ET INFOS */}
         <div className="space-y-8">
           
-          {/* CORRECTION ICI : aspect-square retiré, utilisation de aspect-[1.58] sur la carte pour respecter la forme d'une carte de visite */}
-          <div className="relative rounded-3xl overflow-hidden flex items-center justify-center p-8 sm:p-16 shadow-2xl" style={{ background: `${product.bgGradient}80`, minHeight: '400px' }}>
+          <div className="relative rounded-3xl overflow-hidden flex items-center justify-center p-8 sm:p-16 shadow-2xl border border-slate-200 bg-slate-100" style={{ minHeight: '400px' }}>
             <div className="w-full max-w-[420px] relative card-3d-anim" style={{ aspectRatio: '1.58' }}>
-               <DimacardPhysical product={product} />
+               <DimacardPhysical />
             </div>
           </div>
           
           <div>
-            <div className="inline-block px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4 border" style={{ color: product.themeColor, backgroundColor: `${product.themeColor}15`, borderColor: `${product.themeColor}30` }}>
+            <div className="inline-block px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4 border text-[#00D66B] bg-[#00D66B]/10 border-[#00D66B]/30">
               {product.tag}
             </div>
             <h1 className="text-4xl sm:text-5xl font-black text-slate-900 leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
@@ -692,7 +719,7 @@ function ProductPage({ productId, setCurrentPage }) {
           <div className="space-y-4">
             {product.features.map((feat, i) => (
               <div key={i} className="flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
-                <Check className="w-6 h-6 shrink-0" style={{ color: product.themeColor }} />
+                <Check className="w-6 h-6 shrink-0 text-[#00D66B]" />
                 <span className="font-bold text-slate-800">{feat}</span>
               </div>
             ))}
@@ -705,10 +732,10 @@ function ProductPage({ productId, setCurrentPage }) {
           
           <div className="flex justify-between items-end mb-8 border-b border-slate-100 pb-6">
             <div>
-              <h2 className="text-2xl font-black text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>Personnalisez votre carte</h2>
+              <h2 className="text-2xl font-black text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>Personnalisez votre commande</h2>
               <p className="text-sm text-slate-500 mt-1">Saisissez les infos à configurer sur la puce.</p>
             </div>
-            <span className="text-3xl font-black" style={{ color: product.themeColor, fontFamily: 'var(--font-display)' }}>{product.price}</span>
+            <span className="text-3xl font-black text-[#00D66B]" style={{ fontFamily: 'var(--font-display)' }}>{product.price}</span>
           </div>
 
           <form onSubmit={handleOrderSubmit} className="space-y-5">
@@ -745,7 +772,7 @@ function ProductPage({ productId, setCurrentPage }) {
             </div>
 
             <button type="submit" disabled={isSubmitting || isSuccess} className={`w-full py-5 mt-4 font-black rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer text-white border-none shadow-xl ${isSuccess ? 'bg-[#00A354] shadow-[#00A354]/30' : 'bg-[#00D66B] hover:bg-[#00A354] shadow-[#00D66B]/30'} disabled:opacity-80`} style={{ fontFamily: 'var(--font-body)' }}>
-              {isSubmitting ? <><Loader className="w-6 h-6 animate-spin" /> Traitement de la commande...</> : isSuccess ? <><CheckCircle className="w-6 h-6" /> Commande Confirmée !</> : <>VALIDER MA CARTE ({product.price}) <Zap className="w-5 h-5" /></>}
+              {isSubmitting ? <><Loader className="w-6 h-6 animate-spin" /> Traitement de la commande...</> : isSuccess ? <><CheckCircle className="w-6 h-6" /> Commande Envoyée !</> : <>VALIDER MA COMMANDE ({product.price}) <Zap className="w-5 h-5" /></>}
             </button>
             <p className="text-center text-xs text-slate-400 mt-2">Paiement sécurisé à la livraison. Livraison 48h au Maroc.</p>
           </form>
@@ -759,7 +786,6 @@ function ProductPage({ productId, setCurrentPage }) {
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
 
-  // Détection de la page demandée
   const isProductPage = currentPage.startsWith('product_');
   const productId = isProductPage ? currentPage.split('_')[1] : null;
 
