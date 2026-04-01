@@ -295,9 +295,19 @@ function Features() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#00D66B]/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="max-w-7xl mx-auto relative z-10">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="text-center mb-20">
-          <h2 className="text-4xl sm:text-6xl font-black mb-6 tracking-tight text-white" style={{ fontFamily: 'var(--font-display)' }}>
-            L'Expérience <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00D66B] to-[#D500F9]">Premium</span>
-          </h2>
+        <h2 className="text-4xl sm:text-6xl font-black mb-6 tracking-tight text-white" style={{ fontFamily: 'var(--font-display)' }}>
+          L'Expérience{' '}
+          <span style={{
+            backgroundImage: 'linear-gradient(to right, #00D66B, #D500F9)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            color: 'transparent',
+            display: 'inline-block'
+          }}>
+            Premium
+          </span>
+        </h2>
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">Tout ce dont vous avez besoin pour propulser votre réseau dans une nouvelle dimension.</p>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -354,9 +364,20 @@ function HowItWorksCombined() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="space-y-12 relative z-10">
             <div>
-              <h2 className="text-4xl sm:text-5xl font-black text-white mb-6 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
-                Comment ça <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00D66B] to-[#D500F9]">marche ?</span>
+            <h2 className="text-4xl sm:text-6xl font-black mb-6 tracking-tight text-white" style={{ fontFamily: 'var(--font-display)' }}>
+                Comment ça{' '}
+                <span style={{
+                  backgroundImage: 'linear-gradient(to right, #00D66B, #D500F9)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  color: 'transparent',
+                  display: 'inline-block'
+                }}>
+                  marche ?
+                </span>
               </h2>
+
               <p className="text-xl text-slate-300">Passez au networking nouvelle génération en trois étapes simples.</p>
             </div>
             <div className="space-y-8">
@@ -444,9 +465,19 @@ function Pricing({ setCurrentPage }) {
       <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-[#00D66B]/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="max-w-6xl mx-auto relative z-10">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="text-center mb-16 space-y-4">
-          <h2 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
-            Passez au <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00D66B] to-[#D500F9]">Networking 2.0</span>
-          </h2>
+        <h2 className="text-4xl sm:text-6xl font-black mb-6 tracking-tight text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
+          Passez au{' '}
+          <span style={{
+            backgroundImage: 'linear-gradient(to right, #00D66B, #D500F9)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            color: 'transparent',
+            display: 'inline-block'
+          }}>
+            Networking 2.0
+          </span>
+        </h2>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto" style={{ fontFamily: 'var(--font-body)' }}>Choisissez l'offre DimaCard qui correspond à vos ambitions.</p>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
@@ -512,9 +543,19 @@ function Contact() {
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#00D66B]/10 blur-[100px] rounded-full pointer-events-none" />
       <div className="max-w-7xl mx-auto relative z-10">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-black text-slate-900 mb-4 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
-            Prêt à faire le <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00D66B] to-[#D500F9]">premier pas ?</span>
-          </h2>
+        <h2 className="text-4xl sm:text-6xl font-black mb-6 tracking-tight text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
+          Prêt à faire le{' '}
+          <span style={{
+            backgroundImage: 'linear-gradient(to right, #00D66B, #D500F9)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            color: 'transparent',
+            display: 'inline-block'
+          }}>
+            premier pas ?
+          </span>
+        </h2>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto" style={{ fontFamily: 'var(--font-body)' }}>Contactez l'équipe DimaCard pour une démo ou une commande personnalisée.</p>
         </motion.div>
 
