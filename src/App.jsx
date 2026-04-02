@@ -498,7 +498,7 @@ function Pricing({ setCurrentPage }) {
             <motion.div key={index} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} whileHover={{ y: -10 }} transition={{ duration: 0.5, delay: index * 0.1 }} viewport={{ once: true }} className={`relative p-6 xl:p-8 rounded-3xl transition-all duration-500 flex flex-col h-full ${plan.highlight ? 'bg-white border-2 border-[#00D66B] shadow-[0_20px_50px_rgba(0,214,107,0.15)] md:scale-105 z-20' : 'bg-white border border-slate-200 hover:border-[#00D66B]/30 shadow-sm z-10'}`}>
               {plan.highlight && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#00D66B] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1 whitespace-nowrap">
-                  <Sparkles className="w-3 h-3" /> Recommandé
+                  <Sparkles className="w-3 h-3" /> Comming Soon
                 </div>
               )}
               <div className="mb-8">
@@ -583,7 +583,7 @@ function Contact() {
             </div>
             <div className="space-y-6">
               <div className="flex items-start gap-4"><div className="w-12 h-12 rounded-xl bg-[#00D66B]/10 border border-[#00D66B]/20 flex items-center justify-center shrink-0"><Mail className="w-5 h-5 text-[#00D66B]" /></div><div><h4 className="text-slate-900 font-bold mb-1">Email</h4><a href="mailto:contact@dimacard.ma" className="text-slate-600 hover:text-[#00D66B] transition-colors text-sm font-medium">contact@dimacard.ma</a></div></div>
-              <div className="flex items-start gap-4"><div className="w-12 h-12 rounded-xl bg-[#00D66B]/10 border border-[#00D66B]/20 flex items-center justify-center shrink-0"><Phone className="w-5 h-5 text-[#00D66B]" /></div><div><h4 className="text-slate-900 font-bold mb-1">Téléphone</h4><a href="tel:+212708066509" className="text-slate-600 hover:text-[#00D66B] transition-colors text-sm font-medium">+212 6 00 00 00 00</a></div></div>
+              <div className="flex items-start gap-4"><div className="w-12 h-12 rounded-xl bg-[#00D66B]/10 border border-[#00D66B]/20 flex items-center justify-center shrink-0"><Phone className="w-5 h-5 text-[#00D66B]" /></div><div><h4 className="text-slate-900 font-bold mb-1">Téléphone</h4><a href="tel:+212708066509" className="text-slate-600 hover:text-[#00D66B] transition-colors text-sm font-medium">+212 7 08 06 65 09</a></div></div>
               <div className="flex items-start gap-4"><div className="w-12 h-12 rounded-xl bg-[#00D66B]/10 border border-[#00D66B]/20 flex items-center justify-center shrink-0"><MapPin className="w-5 h-5 text-[#00D66B]" /></div><div><h4 className="text-slate-900 font-bold mb-1"> Bureau</h4><p className="text-slate-600 text-sm font-medium">Tanger, Maroc</p></div></div>
             </div>
           </motion.div>
