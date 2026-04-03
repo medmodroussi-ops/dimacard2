@@ -398,7 +398,7 @@ function HowItWorksCombined() {
                     <motion.div key="success" initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="absolute inset-0 bg-[#111] overflow-y-auto pb-6 scrollbar-hide">
                       <div className="h-32 bg-gradient-to-br from-[#00A354] to-[#0F172A]" />
                       <div className="px-5 -mt-10 relative z-10 flex flex-col items-center">
-                        <div className="w-20 h-20 rounded-full border-4 border-[#111] bg-gray-800 flex items-center justify-center shadow-lg"><span className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>JD</span></div>
+                        <div className="w-20 h-20 rounded-full border-4 border-[#111] bg-gray-800 flex items-center justify-center shadow-lg"><span className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>MM</span></div>
                         <div className="mt-3 text-center">
                           <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>Mohammed Modroussi</h2>
                           <p className="text-[#00D66B] font-medium text-xs mt-1">CEO DimaCard</p>
