@@ -200,7 +200,7 @@ function Navbar({ currentPage, setCurrentPage }) {
               Boutique
             </button>
           </div>
-          <a href="#contact" style={{ padding: "10px 24px", borderRadius: 100, background: "var(--dima-primary)", color: "#0B0F19", fontFamily: "var(--font-body)", fontWeight: 800, fontSize: 13, textDecoration: "none", boxShadow: "0 4px 20px rgba(245, 166, 35, 0.3)", transition: "all 0.3s" }} onMouseEnter={e => e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e => e.currentTarget.style.transform="translateY(0)"}>Contact</a>
+          <a href="https://dimacardapp2.vercel.app" style={{ padding: "10px 24px", borderRadius: 100, background: "var(--dima-primary)", color: "#0B0F19", fontFamily: "var(--font-body)", fontWeight: 800, fontSize: 13, textDecoration: "none", boxShadow: "0 4px 20px rgba(245, 166, 35, 0.3)", transition: "all 0.3s" }} onMouseEnter={e => e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e => e.currentTarget.style.transform="translateY(0)"}>Login</a>
         </div>
       </div>
     </nav>
