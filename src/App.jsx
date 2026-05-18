@@ -397,8 +397,8 @@ function HowItWorksCombined() {
                       <div className="px-5 -mt-10 relative z-10 flex flex-col items-center">
                         <div className="w-20 h-20 rounded-full border-4 border-[#111827] bg-[#1F2937] flex items-center justify-center shadow-xl"><span className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>MM</span></div>
                         <div className="mt-3 text-center">
-                          <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>Mohammed Modroussi</h2>
-                          <p className="text-[#F5A623] font-medium text-xs mt-1">CEO DimaCard</p>
+                          <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>Mohammed</h2>
+                          <p className="text-[#F5A623] font-medium text-xs mt-1">CEO</p>
                           <p className="text-gray-400 text-[10px] mt-1 flex items-center justify-center gap-1"><MapPin className="w-3 h-3" /> Tanger, Maroc</p>
                         </div>
                         
@@ -413,7 +413,7 @@ function HowItWorksCombined() {
                           </div>
                           <div className="flex flex-col items-center justify-center p-3 bg-[#1F2937] border border-white/5 rounded-xl text-center">
                             <Mail className="w-5 h-5 text-[#8B5CF6] mb-2" />
-                            <span className="text-[10px] text-gray-300 font-medium">M.modroussi@dimacard.ma</span>
+                            <span className="text-[10px] text-gray-300 font-medium">contact@dimacard.ma</span>
                           </div>
                           <div className="flex flex-col items-center justify-center p-3 bg-[#1F2937] border border-white/5 rounded-xl text-center">
                             <Linkedin className="w-5 h-5 text-[#06B6D4] mb-2" />
