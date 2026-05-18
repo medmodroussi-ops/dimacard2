@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DimaCard – Le Catalogue Officiel</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-main: #0B0F19;
+    --bg-surface: #111827;
+    --bg-card: #1F2937;
+    
+    --primary: #F5A623;
+    --primary-light: #FDE047;
+    --primary-dark: #D97706;
+    --secondary: #8B5CF6;
+    --white: #ffffff;
+    --text-muted: #9CA3AF;
+    --page-bg: #111827;
+    
+    --book-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 40px rgba(0,0,0,0.6);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-main);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: absolute;
+    top: 10%; left: 10%;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .book-container {
+    max-width: 680px;
+    width: 100%;
+    background: var(--page-bg);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: var(--book-shadow);
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    z-index: 10;
+  }
+
+  .book-page {
+    padding: 65px 50px;
+    position: relative;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 720px; /* Légèrement réduit pour maximiser la compatibilité mobile verticale */
+    background: radial-gradient(circle at center, rgba(31, 41, 55, 0.4) 0%, var(--page-bg) 100%);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  .book-page.active { display: flex; opacity: 1; transform: translateY(0); }
+
+  .page-border {
+    position: absolute;
+    inset: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    pointer-events: none;
+  }
+
+  .page-number {
+    position: absolute;
+    bottom: 25px; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    letter-spacing: 2px;
+  }
+
+  .section-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.4em;
+    color: var(--primary);
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    display: block;
+  }
+
+  .section-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+    font-weight: 900;
+    line-height: 1.2;
+    color: var(--white);
+    margin-bottom: 25px;
+  }
+
+  .section-title span {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .section-body { font-size: 1.05rem; color: var(--text-muted); line-height: 1.8; }
+
+  .dropcap::first-letter {
+    font-family: 'Outfit', sans-serif;
+    font-size: 3.5rem;
+    float: left;
+    margin-right: 12px;
+    line-height: 1;
+    color: var(--primary);
+    font-weight: 900;
+  }
+
+  .gold-divider {
+    width: 80px; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    margin: 25px 0;
+  }
+
+  /* ─── OPTIMISATION ET RESPONSIVITÉ DU LOGO ─── */
+  .logo-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 25px;
+  }
+
+  .logo-wrap img {
+    width: 100%;
+    max-width: 220px;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 30px rgba(0,0,0,0.6));
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: transform 0.3s ease;
+  }
+
+  /* ─── MODIFICATION : CARTE BLANCHE ─── */
+  .nfc-visual {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 35px;
+  }
+
+  .card-3d {
+    width: 310px;
+    height: 190px;
+    background: #FFFFFF; /* Couleur de la carte changée en Blanc */
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.1);
+    position: relative;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+
+  .card-3d::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.05; /* Motif très léger sur le blanc */
+    background: repeating-linear-gradient(-45deg, transparent, transparent 10px, #000000 10px, #000000 20px);
+  }
+
+  .card-chip {
+    position: absolute;
+    top: 30px; left: 25px;
+    width: 45px; height: 35px;
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    border-radius: 6px;
+  }
+
+  .card-name {
+    position: absolute;
+    bottom: 30px; left: 25px;
+    text-align: left;
+  }
+
+  .card-name-text {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #0B0F19; /* Texte sombre pour lisibilité sur blanc */
+    letter-spacing: 1px;
+  }
+
+  .card-title-text {
+    font-size: 0.7rem;
+    color: #64748b; /* Gris ardoise sur blanc */
+    text-transform: uppercase;
+    margin-top: 2px;
+    font-weight: 700;
+  }
+
+  /* ─── CATALOGUE ITEMS ─── */
+  .catalog-stack { display: flex; flex-direction: column; gap: 20px; }
+  .catalog-item {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    padding: 22px 20px;
+    border-radius: 12px;
+  }
+
+  .item-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+    padding-bottom: 6px; margin-bottom: 8px;
+  }
+
+  .item-name { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--primary-light); }
+  .item-price { font-family: 'Outfit', sans-serif; font-weight: 800; color: var(--primary); }
+
+  .editorial-steps { display: flex; flex-direction: column; gap: 25px; text-align: left; }
+  .editorial-step { display: flex; gap: 20px; }
+  .step-num { font-family: 'Outfit', sans-serif; font-size: 1.4rem; color: var(--primary); font-weight: 900; border-bottom: 2px solid var(--primary); }
+
+  .btn-gold {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    color: var(--bg-main);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 14px 40px;
+    border-radius: 8px;
+    margin-top: 20px;
+  }
+
+  .navigation-bar { margin-top: 30px; display: flex; align-items: center; gap: 25px; }
+  .nav-btn {
+    background: transparent;
+    border: 1px solid rgba(245,166,35,0.3);
+    color: var(--primary);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    padding: 8px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .catalog-footer {
+    width: 100%; max-width: 680px; margin-top: 25px;
+    display: flex; justify-content: space-between;
+    font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 0.75rem;
+    color: rgba(245,166,35,0.2);
+  }
+
+  /* REQUÊTES MÉDIA POUR SMARTPHONES COMPACTS */
+  @media (max-width: 480px) {
+    .logo-wrap img {
+      max-width: 160px; /* Réduit la taille du logo sur les petits téléphones */
+    }
+    .book-page {
+      padding: 45px 25px;
+      min-height: 600px; /* S'adapte dynamiquement à la hauteur de l'écran mobile */
+    }
+    .page-border {
+      inset: 15px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="book-container">
+
+  <!-- 📄 FEUILLE 1 : COUVERTURE -->
+  <div class="book-page active">
+    <div class="page-border"></div>
+    <div class="hero-content">
+      <div class="logo-wrap">
+        <img src="dimacard.png" 
+             alt="DimaCard Logo" 
+             id="logo-img"
+             onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';">
+        <!-- Logo de secours en CSS pur si le chemin local ne charge pas -->
+        <div id="logo-fallback" style="display: none; width: 120px; height: 120px; border-radius: 24px; border: 1px solid rgba(245, 166, 35, 0.3); background: rgba(31, 41, 55, 0.6); align-items: center; justify-content: center; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.5rem; color: var(--primary); text-shadow: 0 0 10px rgba(245, 166, 35, 0.4); margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+          DIMACARD
+        </div>
+      </div>
+      <h1 class="hero-tagline">Catalogue Officiel</h1>
+      <p class="hero-sub">La carte de visite digitale perpétuelle</p>
+      <div class="gold-divider" style="margin: 20px auto;"></div>
+      <p style="font-size:0.75rem; letter-spacing: 3px; color: var(--primary-dark); font-family:'Outfit'; font-weight: 800;">EDITION MAROC · 2026</p>
+    </div>
+    <span class="page-number">DIMACARD</span>
+  </div>
+
+  <!-- 📄 FEUILLE 2 : VISION (AVEC CARTE BLANCHE) -->
+  <div class="book-page">
+    <div class="page-border"></div>
+    <div>
+      <span class="section-label">Vision</span>
+      <h2 class="section-title">Qu'est-ce que <span>DimaCard</span> ?</h2>
+      <p class="section-body dropcap">
+        DimaCard est une carte de visite NFC intelligente, conçue pour ne jamais être obsolète. Un simple geste suffit pour partager votre identité professionnelle complète directement sur le smartphone de vos interlocuteurs.
+      </p>
+    </div>
+    
+    <div class="nfc-visual">
+      <!-- LE VISUEL DE LA CARTE EST MAINTENANT BLANC -->
+      <div class="card-3d">
+        <div class="card-chip"></div>
+        <div class="card-name">
+          <div class="card-name-text">DIMACARD</div>
+          <div class="card-title-text">CEO & FONDATEUR</div>
+        </div>
+      </div>
+    </div>
+    <span class="page-number">01</span>
+  </div>
+
+  <!-- 📄 FEUILLE 3 : GAMME -->
+  <div class="book-page">
+    <div class="page-border"></div>
+    <div>
+      <span class="section-label">Gamme</span>
+      <h2 class="section-title">Les Offres <span>Essentielles</span></h2>
+      <div class="catalog-stack">
+        <div class="catalog-item">
+          <div class="item-header"><span class="item-name">Étudiant</span><span class="item-price">99 DH</span></div>
+          <p class="item-desc">Idéal pour dynamiser vos recherches de stages ou PFE.</p>
+        </div>
+        <div class="catalog-item">
+          <div class="item-header"><span class="item-name">Starter</span><span class="item-price">149 DH</span></div>
+          <p class="item-desc">L'essentiel pour partager vos fiches de contact complexes.</p>
+        </div>
+      </div>
+    </div>
+    <span class="page-number">02</span>
+  </div>
+
+  <!-- 📄 FEUILLE 4 : PRESTIGE -->
+  <div class="book-page">
+    <div class="page-border"></div>
+    <div>
+      <span class="section-label">Prestige</span>
+      <h2 class="section-title">Les Offres <span>Professionnelles</span></h2>
+      <div class="catalog-stack" style="margin-bottom: 25px;">
+        <div class="catalog-item" style="border: 1px solid var(--primary); background: rgba(245,166,35,0.02);">
+          <div class="item-header"><span class="item-name" style="color: var(--primary-light);">Professionnel ★</span><span class="item-price">299 DH</span></div>
+          <p class="item-desc">Contrôle absolu, modifiable en temps réel à l'infini.</p>
+        </div>
+        <div class="catalog-item">
+          <div class="item-header"><span class="item-name">Entreprise</span><span class="item-price">Sur Devis</span></div>
+          <p class="item-desc">Architecture sur-mesure pour vos équipes (5+ collaborateurs).</p>
+        </div>
+      </div>
+      <div class="quote-box">
+        <p>"DimaCard a transformé ma manière de réseauter lors des forums d'affaires."</p>
+        <div class="quote-author">— Ahmed R., Directeur</div>
+      </div>
+    </div>
+    <span class="page-number">03</span>
+  </div>
+
+  <!-- 📄 FEUILLE 5 : PROTOCOLE -->
+  <div class="book-page">
+    <div class="page-border"></div>
+    <div>
+      <span class="section-label">Protocole</span>
+      <h2 class="section-title">Comment ça <span>marche</span> ?</h2>
+      <div class="editorial-steps">
+        <div class="editorial-step">
+          <div class="step-num">I</div>
+          <div class="step-content"><h3>Commande</h3><p>Choisissez votre modèle et validez en ligne.</p></div>
+        </div>
+        <div class="editorial-step">
+          <div class="step-num">II</div>
+          <div class="step-content"><h3>Profil</h3><p>Organisez votre vitrine digitale et vos liens.</p></div>
+        </div>
+        <div class="editorial-step">
+          <div class="step-num">III</div>
+          <div class="step-content"><h3>Envoi</h3><p>Expédition partout au Maroc sous 5 à 7 jours.</p></div>
+        </div>
+      </div>
+    </div>
+    <span class="page-number">04</span>
+  </div>
+
+  <!-- 📄 FEUILLE 6 : ACTION -->
+  <div class="book-page">
+    <div class="page-border"></div>
+    <div>
+      <span class="section-label">Excellence</span>
+      <h2 class="section-title">Les Atouts <span>DimaCard</span></h2>
+      <div class="feature-editorial"><h4>Zéro Abonnement</h4><p>Votre espace vitrine vous appartient définitivement.</p></div>
+      <div class="feature-editorial"><h4>Zéro Friction</h4><p>Pas d'application requise pour votre interlocuteur.</p></div>
+      <div class="feature-editorial"><h4>Zéro Papier</h4><p>Un geste concret pour l'environnement.</p></div>
+      <div style="text-align: center; margin-top: 35px;">
+        <a href="https://wa.me/" class="btn-gold">Passer Commande</a>
+      </div>
+    </div>
+    <span class="page-number">05</span>
+  </div>
+
+</div>
+
+<div class="navigation-bar">
+  <button class="nav-btn" id="prevPageBtn" disabled>◀ Précédent</button>
+  <div class="book-indexer" id="bookIndexer">Page 1 / 6</div>
+  <button class="nav-btn" id="nextPageBtn">Suivant ▶</button>
+</div>
+
+<div class="catalog-footer">
+  <div>DIMA CARD S.A.R.L</div>
+  <div>CONTACT@DIMACARD.MA</div>
+</div>
+
+<script>
+  const pages = document.querySelectorAll('.book-page');
+  const prevBtn = document.getElementById('prevPageBtn');
+  const nextBtn = document.getElementById('nextPageBtn');
+  const indexer = document.getElementById('bookIndexer');
+  let currentPageIndex = 0;
+
+  function updatePageView() {
+    pages.forEach((page, index) => {
+      index === currentPageIndex ? page.classList.add('active') : page.classList.remove('active');
+    });
+    prevBtn.disabled = currentPageIndex === 0;
+    nextBtn.disabled = currentPageIndex === pages.length - 1;
+    indexer.textContent = `Page ${currentPageIndex + 1} / ${pages.length}`;
+  }
+
+  prevBtn.addEventListener('click', () => { if (currentPageIndex > 0) { currentPageIndex--; updatePageView(); } });
+  nextBtn.addEventListener('click', () => { if (currentPageIndex < pages.length - 1) { currentPageIndex++; updatePageView(); } });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' && currentPageIndex < pages.length - 1) { currentPageIndex++; updatePageView(); }
+    else if (e.key === 'ArrowLeft' && currentPageIndex > 0) { currentPageIndex--; updatePageView(); }
+  });
+</script>
+
+</body>
+</html>
